@@ -5,6 +5,9 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 
+// Add a global variable to prevent multiple redirects
+let redirectAttempted = false;
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -26,13 +29,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         
         if (error) {
           console.error('Error checking auth in dashboard layout:', error);
-          window.location.href = '/login';
+          if (!redirectAttempted) {
+            redirectAttempted = true;
+            window.location.href = '/login';
+          }
           return;
         }
         
         if (!data.session) {
           console.log('No session found in dashboard layout, redirecting to login');
-          window.location.href = '/login';
+          if (!redirectAttempted) {
+            redirectAttempted = true;
+            window.location.href = '/login';
+          }
           return;
         }
         
@@ -40,16 +49,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         setIsAuthenticated(true);
       } catch (err) {
         console.error('Unexpected error in auth check:', err);
-        window.location.href = '/login';
+        if (!redirectAttempted) {
+          redirectAttempted = true;
+          window.location.href = '/login';
+        }
       } finally {
         setIsCheckingAuth(false);
       }
     };
     
     // Add a small delay to ensure cookies are properly processed
+    // Increased delay to give more time for session loading
     const timer = setTimeout(() => {
       checkAuth();
-    }, 500);
+    }, 1000);
     
     return () => clearTimeout(timer);
   }, [user]);
@@ -68,6 +81,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return <DashboardLayout>{children}</DashboardLayout>;
   }
   
-  // This should not render, but just in case
-  return null;
+  // Show a friendly message instead of redirecting in a loop
+  return (
+    <div className="flex h-screen flex-col items-center justify-center p-4 text-center">
+      <h1 className="text-2xl font-bold mb-4">Authentication Required</h1>
+      <p className="mb-6">You need to be logged in to access this page.</p>
+      <button 
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        onClick={() => window.location.href = '/login'}
+      >
+        Go to Login
+      </button>
+    </div>
+  );
 }

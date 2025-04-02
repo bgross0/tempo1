@@ -50,6 +50,20 @@ export const useAppStore = create<AppStore>((set) => ({
   contextMenuEventId: null,
   currentEditItemId: null,
   currentEditItemType: null,
+  settings: {
+    workingHoursStart: "09:00", // Format as HH:MM string
+    workingHoursEnd: "17:00",   // Format as HH:MM string
+    defaultTaskDuration: 60,
+    defaultChunkDuration: 30,
+    taskSchedulingStrategy: 'balanced',
+    defaultView: 'calendar',
+    defaultCalendarView: 'week',
+    primaryColor: '#4f46e5', // Indigo
+    theme: 'light',
+    notifications: 'enabled',
+    notificationTime: '15'
+  },
+  isGuestMode: false,
   
   // Auth actions
   setUser: (user) => set({ currentUser: user }),
@@ -72,9 +86,10 @@ export const useAppStore = create<AppStore>((set) => ({
   deleteProject: (projectId) => set((state) => ({
     projects: state.projects.filter(p => p.id !== projectId),
     // Also update any tasks associated with this project
-    tasks: state.tasks.map(t => t.projectId === projectId ? { ...t, projectId: undefined } : t)
+    tasks: state.tasks.map(t => t.projectId === projectId ? { ...t, projectId: null } : t)
   })),
   
+  // Use simple direct setter - avoid complex logic that could cause infinite loops
   setEvents: (events) => set({ events }),
   addEvent: (event) => set((state) => ({ events: [...state.events, event] })),
   updateEvent: (event) => set((state) => ({

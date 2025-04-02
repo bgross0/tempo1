@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -20,6 +20,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
+import { ThemeToggle } from './ThemeToggle';
+import { useDarkMode } from '@/hooks/useDarkMode';
 
 interface NavItemProps {
   href: string;
@@ -37,8 +39,8 @@ function NavItem({ href, icon, label }: NavItemProps) {
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
         isActive 
-          ? "bg-blue-100 text-blue-900" 
-          : "text-gray-600 hover:text-blue-900 hover:bg-gray-100"
+          ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:bg-opacity-20 dark:text-blue-300" 
+          : "text-gray-600 dark:text-gray-300 hover:text-blue-900 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800"
       )}
     >
       {icon}
@@ -50,6 +52,16 @@ function NavItem({ href, icon, label }: NavItemProps) {
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut, user } = useAuth();
+  const { isDarkMode } = useDarkMode();
+
+  // Apply dark mode to body
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const handleSignOut = async () => {
     try {
@@ -80,7 +92,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
@@ -92,15 +104,15 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-white transition-transform duration-200 ease-in-out lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 transform bg-white dark:bg-gray-800 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
           {/* Sidebar header */}
-          <div className="flex h-16 items-center justify-between px-4 border-b">
+          <div className="flex h-16 items-center justify-between px-4 border-b dark:border-gray-700">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="text-blue-600 font-bold text-xl">TaskJet</span>
+              <span className="text-blue-600 dark:text-blue-400 font-bold text-xl">TaskJet</span>
             </Link>
             <Button 
               variant="ghost" 
@@ -113,13 +125,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
 
           {/* User info */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b">
+          <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-gray-700">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white">
               {userInitial}
             </div>
             <div>
               <p className="font-medium">{userName}</p>
-              <p className="text-xs text-gray-500">{user?.email}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
             </div>
           </div>
 
@@ -135,7 +147,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </nav>
 
           {/* Sidebar footer */}
-          <div className="border-t p-4">
+          <div className="border-t dark:border-gray-700 p-4">
             <Button
               variant="outline"
               className="w-full justify-start gap-2"
@@ -151,7 +163,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top header */}
-        <header className="flex h-16 items-center justify-between border-b bg-white px-4">
+        <header className="flex h-16 items-center justify-between border-b dark:border-gray-700 bg-white dark:bg-gray-800 px-4">
           <Button 
             variant="ghost" 
             size="icon" 
@@ -162,6 +174,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </Button>
 
           <div className="flex items-center gap-2 ml-auto">
+            <ThemeToggle />
             <Button variant="ghost" size="icon">
               <User className="h-5 w-5" />
             </Button>

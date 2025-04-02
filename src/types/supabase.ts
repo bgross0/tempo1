@@ -171,16 +171,18 @@ export type Database = {
         Row: {
           chunk_size: number | null
           completed: boolean
+          completed_at: string | null
           created_at: string
           description: string | null
           due_date: string
           due_time: string | null
-          duration: number
+          duration: number | null
           hard_deadline: boolean
           id: string
           name: string
           priority: string
           project_id: string | null
+          scheduled_blocks: Json | null
           start_date: string | null
           start_time: string | null
           tags: string[] | null
@@ -190,16 +192,18 @@ export type Database = {
         Insert: {
           chunk_size?: number | null
           completed?: boolean
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date: string
           due_time?: string | null
-          duration?: number
+          duration?: number | null
           hard_deadline?: boolean
           id?: string
           name: string
           priority?: string
           project_id?: string | null
+          scheduled_blocks?: Json | null
           start_date?: string | null
           start_time?: string | null
           tags?: string[] | null
@@ -209,16 +213,18 @@ export type Database = {
         Update: {
           chunk_size?: number | null
           completed?: boolean
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date?: string
           due_time?: string | null
-          duration?: number
+          duration?: number | null
           hard_deadline?: boolean
           id?: string
           name?: string
           priority?: string
           project_id?: string | null
+          scheduled_blocks?: Json | null
           start_date?: string | null
           start_time?: string | null
           tags?: string[] | null

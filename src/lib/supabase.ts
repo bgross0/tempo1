@@ -1,9 +1,8 @@
 // src/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js';
-import { createBrowserClient } from '@supabase/ssr';
-import { Database } from '@/types/database';
+import { Database } from '@/types/supabase';
 
-// Make sure environment variables are available
+// Environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -12,8 +11,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Supabase environment variables are missing!');
 }
 
-// Create a browser Supabase client
-export const supabase = createBrowserClient<Database>(
+// Create a standard Supabase client with explicit headers
+export const supabase = createClient<Database>(
   supabaseUrl || '',
-  supabaseAnonKey || ''
+  supabaseAnonKey || '',
+  {
+    global: {
+      headers: {
+        apikey: supabaseAnonKey || ''
+      }
+    },
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true
+    }
+  }
 );

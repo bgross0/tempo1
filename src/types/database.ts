@@ -1,174 +1,80 @@
-export type Profile = {
-  id: string;
-  email: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  created_at: string;
-  updated_at: string;
-};
+// Types for the database schema
+import { Json } from './supabase';
 
-export type UserSettings = {
-  id: string;
-  working_hours_start: string;
-  working_hours_end: string;
-  default_task_duration: number;
-  default_chunk_duration: number;
-  task_scheduling_strategy: string;
-  default_view: string;
-  default_calendar_view: string;
-  primary_color: string;
-  theme: string;
-  notifications_enabled: boolean;
-  notification_time: number;
-  created_at: string;
-  updated_at: string;
-};
-
-export type Task = {
+export interface Task {
   id: string;
   user_id: string;
   project_id: string | null;
   name: string;
   description: string | null;
-  start_date: string | null;
-  start_time: string | null;
-  due_date: string;
-  due_time: string | null;
+  start_date: string | null; // ISO format YYYY-MM-DD
+  start_time: string | null; // 24h format HH:MM
+  due_date: string; // ISO format YYYY-MM-DD
+  due_time: string | null; // 24h format HH:MM
   priority: 'high' | 'medium' | 'low';
-  duration: number;
-  chunk_size: number | null;
+  duration: number | null; // minutes
+  chunk_size: number | null; // minutes
   hard_deadline: boolean;
   completed: boolean;
-  completed_at: string | null;
+  completed_at: string | null; // ISO datetime
   tags: string[];
-  created_at: string;
-  updated_at: string;
-};
+  created_at: string; // ISO datetime
+  updated_at: string; // ISO datetime
+  scheduled_blocks: Json | null; // Match with Supabase schema (JSONB field)
+}
 
-export type ScheduledBlock = {
-  id: string;
-  task_id: string;
-  date: string;
-  start_minute: number;
-  duration: number;
-  start_time: string;
-  end_time: string;
-  created_at: string;
-};
+export interface ScheduledBlock {
+  date: string; // ISO format YYYY-MM-DD
+  startTime: string; // 24h format HH:MM
+  endTime: string; // 24h format HH:MM
+  taskId: string;
+}
 
-export type Project = {
+export interface Project {
   id: string;
   user_id: string;
   name: string;
   description: string | null;
-  start_date: string;
-  due_date: string;
+  start_date: string; // ISO format YYYY-MM-DD
+  due_date: string; // ISO format YYYY-MM-DD
   priority: 'high' | 'medium' | 'low';
   completed: boolean;
-  completed_at: string | null;
+  completed_at: string | null; // ISO datetime
   tags: string[];
-  created_at: string;
-  updated_at: string;
-};
+  created_at: string; // ISO datetime
+  updated_at: string; // ISO datetime
+}
 
-export type Event = {
+export interface Event {
   id: string;
   user_id: string;
   name: string;
   description: string | null;
-  start_date: string;
-  start_time: string;
-  end_date: string;
-  end_time: string;
+  start_date: string; // ISO format YYYY-MM-DD
+  start_time: string; // 24h format HH:MM
+  end_date: string; // ISO format YYYY-MM-DD
+  end_time: string; // 24h format HH:MM
   location: string | null;
   recurring: 'none' | 'daily' | 'weekly' | 'monthly';
   tags: string[];
-  created_at: string;
-  updated_at: string;
-};
+  created_at: string; // ISO datetime
+  updated_at: string; // ISO datetime
+}
 
-export type SharedTask = {
+export interface User {
   id: string;
-  task_id: string;
-  shared_with: string;
-  permission: 'view' | 'edit';
-  created_at: string;
-};
+  email: string;
+  name: string | null;
+  avatar_url: string | null;
+  created_at: string; // ISO datetime
+  settings: UserSettings | null;
+}
 
-export type Notification = {
-  id: string;
-  user_id: string;
-  type: string;
-  title: string;
-  message: string;
-  read: boolean;
-  related_entity_id: string | null;
-  created_at: string;
-};
-
-export type Database = {
-  public: {
-    Tables: {
-      profiles: {
-        Row: Profile;
-        Insert: Omit<Profile, 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at'>>;
-      };
-      user_settings: {
-        Row: UserSettings;
-        Insert: Partial<Omit<UserSettings, 'id' | 'created_at' | 'updated_at'>>;
-        Update: Partial<Omit<UserSettings, 'id' | 'created_at' | 'updated_at'>>;
-      };
-      tasks: {
-        Row: Task;
-        Insert: Omit<Task, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Task, 'id' | 'created_at' | 'updated_at'>>;
-      };
-      projects: {
-        Row: Project;
-        Insert: Omit<Project, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at'>>;
-      };
-      events: {
-        Row: Event;
-        Insert: Omit<Event, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Event, 'id' | 'created_at' | 'updated_at'>>;
-      };
-      scheduled_blocks: {
-        Row: ScheduledBlock;
-        Insert: Omit<ScheduledBlock, 'id' | 'created_at'>;
-        Update: Partial<Omit<ScheduledBlock, 'id' | 'created_at'>>;
-      };
-      shared_tasks: {
-        Row: SharedTask;
-        Insert: Omit<SharedTask, 'id' | 'created_at'>;
-        Update: Partial<Omit<SharedTask, 'id' | 'created_at'>>;
-      };
-      notifications: {
-        Row: Notification;
-        Insert: Omit<Notification, 'id' | 'created_at'>;
-        Update: Partial<Omit<Notification, 'id' | 'created_at'>>;
-      };
-    };
-    Functions: {
-      get_available_time_slots: {
-        Args: {
-          p_user_id: string;
-          p_start_date: string;
-          p_end_date: string;
-        };
-        Returns: {
-          day: string;
-          start_time: string;
-          end_time: string;
-        }[];
-      };
-      schedule_user_tasks: {
-        Args: {
-          user_id_param: string;
-        };
-        Returns: void;
-      };
-    };
-  };
-};
+export interface UserSettings {
+  theme: 'light' | 'dark' | 'system';
+  working_hours_start: number; // 0-23
+  working_hours_end: number; // 0-23
+  working_days: number[]; // 0-6 (Sunday to Saturday)
+  default_view: 'day' | 'week' | 'month';
+  show_weekends: boolean;
+}

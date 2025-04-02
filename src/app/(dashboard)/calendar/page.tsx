@@ -1,192 +1,155 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Plus, 
-  Calendar as CalendarIcon,
-  Clock
-} from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
-
+import { useState, useEffect, useRef } from 'react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { useTasksRealtime } from '@/hooks/api/useTasksRealtime';
-import { Task } from '@/types/database';
+import { useEventsRealtime } from '@/hooks/api/useEventsRealtime';
+import { useAppStore } from '@/lib/store';
+import { Event as CalendarEvent, Task } from '@/types';
+import Calendar from '@/components/calendar/Calendar';
+import MiniCalendar from '@/components/calendar/MiniCalendar';
 
 export default function CalendarPage() {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const { 
+    setTasks, 
+    setEvents, 
+    calendarView, 
+    currentDate 
+  } = useAppStore();
   
+  // Fetch tasks and events
   const { tasks } = useTasksRealtime();
-
-  // Calendar navigation
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const goToToday = () => setCurrentMonth(new Date());
-
-  // Get days of the month
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-
-  // Get tasks for a specific day
-  const getTasksForDay = (day: Date): Task[] => {
-    return tasks.filter(task => {
-      const taskDate = new Date(task.due_date);
-      return isSameDay(taskDate, day);
-    });
-  };
+  const { events } = useEventsRealtime();
+  
+  // Update global state with fetched data
+  // Use refs to store previous values to avoid unnecessary updates
+  const prevTasksRef = useRef(tasks);
+  const prevConvertedTasksRef = useRef<Task[]>([]);
+  
+  useEffect(() => {
+    // Skip processing if tasks are null or haven't changed
+    if (!tasks || tasks === prevTasksRef.current) {
+      return;
+    }
+    
+    console.log("DEBUG - tasks data changed:", tasks.length, "tasks");
+    prevTasksRef.current = tasks;
+    
+    try {
+      // Convert database tasks to the format used in our store
+      const convertedTasks = tasks.map(task => {
+        // Safely handle scheduled_blocks which might be null or a JSON string
+        let scheduledBlocks = [];
+        if (task.scheduled_blocks) {
+          try {
+            // If it's already an array, use it; if it's a string, parse it
+            scheduledBlocks = typeof task.scheduled_blocks === 'string'
+              ? JSON.parse(task.scheduled_blocks)
+              : (Array.isArray(task.scheduled_blocks) ? task.scheduled_blocks : []);
+          } catch (e) {
+            console.error("Error parsing scheduled_blocks:", e);
+            scheduledBlocks = [];
+          }
+        }
+        
+        return {
+          id: task.id,
+          name: task.name,
+          description: task.description || undefined,
+          startDate: task.start_date ? task.start_date : null,
+          startTime: task.start_time ? task.start_time : null,
+          dueDate: task.due_date,
+          dueTime: task.due_time || null,
+          priority: task.priority,
+          projectId: task.project_id || null,
+          duration: task.duration || 0,
+          chunkSize: task.chunk_size || null,
+          hardDeadline: task.hard_deadline,
+          tags: task.tags || [],
+          completed: task.completed,
+          createdAt: task.created_at,
+          // Use our safely parsed scheduledBlocks
+          scheduledBlocks: scheduledBlocks
+        };
+      });
+      
+      // Deep compare to avoid unnecessary updates
+      const tasksChanged = JSON.stringify(convertedTasks) !== JSON.stringify(prevConvertedTasksRef.current);
+      
+      if (tasksChanged) {
+        console.log("DEBUG - Converted tasks changed, updating store");
+        prevConvertedTasksRef.current = convertedTasks;
+        setTasks(convertedTasks);
+      } else {
+        console.log("DEBUG - Converted tasks unchanged, skipping update");
+      }
+    } catch (error) {
+      console.error("Error converting tasks:", error);
+    }
+  }, [tasks, setTasks]); // Include setTasks to avoid lint warnings
+  
+  // Use a ref to store the previous events array to avoid unnecessary updates
+  const prevEventsRef = useRef(events);
+  const prevConvertedEventsRef = useRef<CalendarEvent[]>([]);
+  
+  // Process events once when they change
+  useEffect(() => {
+    // Skip processing if events are null or haven't changed
+    if (!events || events === prevEventsRef.current) {
+      return;
+    }
+    
+    console.log("DEBUG - events data changed:", events.length, "events");
+    prevEventsRef.current = events;
+    
+    try {
+      // Convert database events to the format used in our store
+      const convertedEvents = events.map(event => ({
+        id: event.id,
+        name: event.name,
+        description: event.description || undefined,
+        startDate: event.start_date,
+        startTime: event.start_time,
+        endDate: event.end_date,
+        endTime: event.end_time,
+        location: event.location || undefined,
+        recurring: event.recurring,
+        tags: event.tags || [],
+        createdAt: event.created_at
+      }));
+      
+      // Deep compare the converted events to see if anything has actually changed
+      const eventsChanged = JSON.stringify(convertedEvents) !== JSON.stringify(prevConvertedEventsRef.current);
+      
+      if (eventsChanged) {
+        console.log("DEBUG - Converted events changed, updating store");
+        prevConvertedEventsRef.current = convertedEvents;
+        setEvents(convertedEvents);
+      } else {
+        console.log("DEBUG - Converted events unchanged, skipping update");
+      }
+    } catch (error) {
+      console.error("Error converting events:", error);
+    }
+  }, [events, setEvents]); // Include setEvents to avoid lint warnings
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Calendar</h1>
-          <p className="text-gray-500">
-            {format(currentMonth, 'MMMM yyyy')}
-          </p>
-        </div>
+    <div className="flex h-full gap-4">
+      {/* Sidebar */}
+      <div className="w-64 space-y-4">
+        <Button className="w-full" onClick={() => console.log('Create event')}>
+          <Plus className="h-4 w-4 mr-1" />
+          Add Event
+        </Button>
         
-        <div className="flex items-center gap-2">
-          <div className="bg-white border rounded-md p-1 flex">
-            <Button 
-              variant={viewMode === 'month' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('month')}
-              className="text-xs px-2"
-            >
-              Month
-            </Button>
-            <Button 
-              variant={viewMode === 'week' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('week')}
-              className="text-xs px-2"
-            >
-              Week
-            </Button>
-            <Button 
-              variant={viewMode === 'day' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('day')}
-              className="text-xs px-2"
-            >
-              Day
-            </Button>
-          </div>
-          
-          <div className="flex gap-1">
-            <Button variant="outline" size="icon" onClick={prevMonth}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={goToToday}>
-              Today
-            </Button>
-            <Button variant="outline" size="icon" onClick={nextMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <Button onClick={() => console.log('Create event')}>
-            <Plus className="h-4 w-4 mr-1" />
-            Add Event
-          </Button>
-        </div>
+        <MiniCalendar />
       </div>
       
-      {viewMode === 'month' && (
-        <Card>
-          <CardContent className="p-4">
-            {/* Month view header - Days of week */}
-            <div className="grid grid-cols-7 gap-px bg-gray-200">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                <div key={day} className="bg-white p-2 text-center text-sm font-medium">
-                  {day}
-                </div>
-              ))}
-            </div>
-            
-            {/* Month view grid */}
-            <div className="grid grid-cols-7 gap-px bg-gray-200">
-              {/* Fill in leading empty cells for days of previous month */}
-              {Array.from({ length: new Date(monthStart).getDay() }).map((_, i) => (
-                <div key={`empty-start-${i}`} className="bg-gray-50 min-h-24 p-2" />
-              ))}
-              
-              {/* Days of the current month */}
-              {daysInMonth.map((day) => {
-                const dayTasks = getTasksForDay(day);
-                const isToday = isSameDay(day, new Date());
-                
-                return (
-                  <div 
-                    key={day.toISOString()} 
-                    className={`bg-white min-h-24 p-2 ${isToday ? 'ring-2 ring-blue-500 ring-inset' : ''}`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className={`text-sm font-medium ${isToday ? 'text-blue-600' : ''}`}>
-                        {format(day, 'd')}
-                      </span>
-                      {dayTasks.length > 0 && (
-                        <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">
-                          {dayTasks.length}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="mt-1 space-y-1 max-h-20 overflow-y-auto">
-                      {dayTasks.slice(0, 3).map((task) => (
-                        <div 
-                          key={task.id} 
-                          className={`text-xs px-2 py-1 rounded truncate ${
-                            task.priority === 'high' 
-                              ? 'bg-red-100 text-red-800' 
-                              : task.priority === 'medium'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
-                          }`}
-                        >
-                          {task.name}
-                        </div>
-                      ))}
-                      {dayTasks.length > 3 && (
-                        <div className="text-xs text-gray-500 px-2">
-                          +{dayTasks.length - 3} more
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-              
-              {/* Fill in trailing empty cells for days of next month */}
-              {Array.from({ 
-                length: 7 - ((daysInMonth.length + new Date(monthStart).getDay()) % 7 || 7)
-              }).map((_, i) => (
-                <div key={`empty-end-${i}`} className="bg-gray-50 min-h-24 p-2" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {viewMode === 'week' && (
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-center py-12">Week view to be implemented</p>
-          </CardContent>
-        </Card>
-      )}
-      
-      {viewMode === 'day' && (
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-center py-12">Day view to be implemented</p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Main calendar */}
+      <div className="flex-1">
+        <Calendar />
+      </div>
     </div>
   );
 }

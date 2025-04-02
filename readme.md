@@ -137,15 +137,48 @@ npm run format
 
 ### Testing
 
+TaskJet uses a comprehensive testing strategy:
+
+#### Unit Tests
 ```bash
-# Run unit and integration tests
+# Run unit tests
 npm run test
 
 # Run tests in watch mode
 npm run test:watch
+```
 
-# Run end-to-end tests
-npm run test:e2e
+#### End-to-End Testing with Cypress
+The project includes comprehensive E2E tests covering all major features:
+
+```bash
+# Open Cypress test runner in interactive mode
+npm run cypress:open
+
+# Run all Cypress tests headlessly
+npm run cypress:run
+```
+
+Our E2E test suite covers:
+- Authentication flows (signup, login, logout, password reset)
+- Task management (create, edit, delete, complete)
+- Project management (create, edit, delete, mark complete)
+- Calendar functionality (day/week/month views, event creation)
+- Analytics dashboard (charts and metrics)
+
+To run specific test suites:
+```bash
+# Run only authentication tests
+npm run cypress:run -- --spec "cypress/e2e/auth.spec.cy.ts"
+
+# Run only task management tests
+npm run cypress:run -- --spec "cypress/e2e/tasks.spec.cy.ts"
+```
+
+For CI/CD environments, use:
+```bash
+# Run E2E tests in CI mode
+npm run cypress:ci
 ```
 
 ### Building for Production
@@ -201,6 +234,9 @@ For internal testers, please refer to the [Testing Guide](./docs/testing-guide.m
 3. Task and project CRUD operations
 4. Calendar view functionality
 5. Responsive design on various devices
+6. Dark mode functionality
+7. Smart scheduling algorithm accuracy
+8. Analytics dashboard data integrity
 
 We appreciate your feedback to help improve TaskJet!
 
@@ -227,3 +263,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
 - [shadcn/ui](https://ui.shadcn.com/)
 - [SWR](https://swr.vercel.app/)
 - [Vercel](https://vercel.com/)
+- [Cypress](https://www.cypress.io/)
