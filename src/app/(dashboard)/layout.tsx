@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import AppErrorBoundary from './error-boundary';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, isLoading: authContextLoading } = useAuth();
@@ -97,7 +98,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         try {
           // Clear cookies that might be causing issues
           document.cookie = 'supabase-auth-token=;path=/;max-age=0';
-          document.cookie = 'taskjet-auth-storage=;path=/;max-age=0';
+          document.cookie = 'tempo-auth-storage=;path=/;max-age=0';
         } catch (e) {
           console.error('Error clearing auth cookies:', e);
         }
@@ -198,9 +199,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
   }
   
-  // Render children only if authenticated
+  // Render children with error boundary if authenticated
   if (isAuthenticated) {
-    return <DashboardLayout>{children}</DashboardLayout>;
+    return (
+      <AppErrorBoundary>
+        <DashboardLayout>{children}</DashboardLayout>
+      </AppErrorBoundary>
+    );
   }
   
   // Show a temporary loading state while redirecting

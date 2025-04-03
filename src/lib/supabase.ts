@@ -70,7 +70,7 @@ export const getAuthStorageState = () => {
   try {
     // Try to get session from localStorage
     if (typeof window !== 'undefined') {
-      const authData = localStorage.getItem('taskjet-auth-storage');
+      const authData = localStorage.getItem('tempo-auth-storage');
       console.log('Auth storage exists:', !!authData);
       return !!authData;
     }

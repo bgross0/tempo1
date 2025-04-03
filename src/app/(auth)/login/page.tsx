@@ -162,14 +162,14 @@ export default function LoginPage() {
       
       // Clear localStorage items
       if (typeof localStorage !== 'undefined') {
-        localStorage.removeItem('taskjet-auth-storage');
+        localStorage.removeItem('tempo-auth-storage');
         localStorage.removeItem('supabase-auth-token');
       }
       
       // Clear cookies
       if (typeof document !== 'undefined') {
         document.cookie = 'supabase-auth-token=;path=/;max-age=0';
-        document.cookie = 'taskjet-auth-storage=;path=/;max-age=0';
+        document.cookie = 'tempo-auth-storage=;path=/;max-age=0';
       }
       
       // Show toast message
@@ -197,9 +197,13 @@ export default function LoginPage() {
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
       <Link
         href="/"
-        className="absolute left-4 top-4 md:left-8 md:top-8 text-lg font-bold text-blue-600"
+        className="absolute left-4 top-4 md:left-8 md:top-8"
       >
-        TaskJet
+        <img 
+          src="/images/logo.png" 
+          alt="Tempo Logo" 
+          className="h-8 w-auto" 
+        />
       </Link>
       
       <Card className="mx-auto max-w-md w-full">

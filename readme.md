@@ -1,6 +1,6 @@
-# TaskJet
+# Tempo
 
-TaskJet is a powerful task management application designed for individuals and teams who need a robust, intuitive solution for organizing tasks, managing projects, scheduling events, and tracking productivity.
+Tempo is a powerful task management application designed for individuals and teams who need a robust, intuitive solution for organizing tasks, managing projects, scheduling events, and tracking productivity.
 
 ## Features
 
@@ -8,6 +8,11 @@ TaskJet is a powerful task management application designed for individuals and t
 - **Smart Scheduling**: Automatically schedules tasks based on priority, deadlines, and your working hours
 - **Task Chunking**: Breaks down large tasks into manageable time blocks
 - **Priority Levels**: High, medium, and low priorities with visual indicators
+- **Task Dialog**: Intuitive task creation and editing via modal dialog
+- **Task Filtering**: Filter tasks by completion status, priority, and due date
+- **Multiple Views**: Toggle between grid and list views for tasks
+- **Hard Deadlines**: Mark tasks that must be completed by their due date
+- **Flexible Scheduling**: Optional start dates/times and due times for precise planning
 - **Batch Operations**: Complete, prioritize, or delete multiple tasks at once
 - **Drag and Drop**: Intuitive task rescheduling with drag and drop in calendar views
 
@@ -61,8 +66,8 @@ TaskJet is a powerful task management application designed for individuals and t
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/taskjet.git
-cd taskjet
+git clone https://github.com/yourusername/tempo.git
+cd tempo
 ```
 
 2. Install dependencies
@@ -137,7 +142,7 @@ npm run format
 
 ### Testing
 
-TaskJet uses a comprehensive testing strategy:
+Tempo uses a comprehensive testing strategy:
 
 #### Unit Tests
 ```bash
@@ -193,7 +198,7 @@ npm run start
 
 ## Deployment
 
-TaskJet is configured for deployment on Vercel:
+Tempo is configured for deployment on Vercel:
 
 1. Connect your GitHub repository to Vercel:
    ```bash
@@ -238,7 +243,7 @@ For internal testers, please refer to the [Testing Guide](./docs/testing-guide.m
 7. Smart scheduling algorithm accuracy
 8. Analytics dashboard data integrity
 
-We appreciate your feedback to help improve TaskJet!
+We appreciate your feedback to help improve Tempo!
 
 ## Contributing
 

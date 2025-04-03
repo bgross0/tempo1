@@ -80,7 +80,7 @@ export default function VerifyEmailPage() {
         href="/"
         className="absolute left-4 top-4 md:left-8 md:top-8 text-lg font-bold text-blue-600"
       >
-        TaskJet
+        Tempo
       </Link>
       
       <Card className="mx-auto max-w-md w-full">

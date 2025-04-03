@@ -112,7 +112,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           {/* Sidebar header */}
           <div className="flex h-16 items-center justify-between px-4 border-b dark:border-gray-700">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="text-blue-600 dark:text-blue-400 font-bold text-xl">TaskJet</span>
+              <img 
+                src="/images/logo.png" 
+                alt="Tempo Logo" 
+                className="h-8 w-auto" 
+              />
             </Link>
             <Button 
               variant="ghost" 

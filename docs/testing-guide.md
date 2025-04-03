@@ -28,11 +28,20 @@ Visit the testing deployment at: [TaskJet Testing Environment](https://taskjet-s
 
 ### Task Management
 
-- [ ] Create a new task with all fields
-- [ ] Edit an existing task
-- [ ] Complete/uncomplete tasks
-- [ ] Delete tasks
-- [ ] Filter tasks by various criteria
+- [ ] Create a new task with all fields using the task dialog
+- [ ] Edit an existing task through the edit button
+- [ ] Test form validation by submitting invalid task data
+- [ ] Complete/uncomplete tasks using the checkbox
+- [ ] Delete tasks and verify they're removed immediately
+- [ ] Filter tasks by completion status (active/completed/overdue)
+- [ ] Filter tasks by priority (high/medium/low)
+- [ ] Toggle between grid and list views
+- [ ] Test task dialog opens and closes correctly
+- [ ] Verify that duration and chunk size fields accept only numbers
+- [ ] Test the hard deadline checkbox functionality
+- [ ] Verify session validation works when creating/editing tasks
+- [ ] Verify toast notifications appear for task operations
+- [ ] Test task form cancel button functionality
 - [ ] Verify real-time updates (open the app in two browsers to test)
 
 ### Project Management
@@ -86,6 +95,9 @@ TaskJet includes three types of tests:
 
 ## Known Limitations
 
+- Project selection in task form is not yet implemented
+- Tag management in task form is not yet implemented
+- Task sorting functionality is incomplete
 - Smart scheduling algorithm is not yet implemented
 - Mobile responsiveness may have issues on some devices
 - Social authentication might not work on all environments
@@ -125,6 +137,17 @@ We're particularly interested in feedback on:
 Thank you for helping us improve TaskJet!
 
 ## Recent Improvements
+
+### Task Management Implementation (April 2, 2025)
+We've fully implemented the task management functionality:
+- Complete task creation/editing dialog with form validation
+- Task filtering by status and priority
+- Grid and list views for tasks
+- Task completion toggling
+- Session validation and refresh for authenticated operations
+- Real-time updates for task changes
+- Consistent UI using shadcn/ui components
+- Toast notifications for all task operations
 
 ### Error Boundaries Implementation
 We've added React Error Boundaries throughout the application to improve resilience. Now if a component crashes, the error is contained, and users can:

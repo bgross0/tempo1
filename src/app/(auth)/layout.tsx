@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Authentication - TaskJet',
-  description: 'Log in or sign up to TaskJet',
+  title: 'Authentication - Tempo',
+  description: 'Log in or sign up to Tempo',
 };
 
 export default function AuthLayout({

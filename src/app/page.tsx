@@ -9,8 +9,12 @@ export default function HomePage() {
       <header className="sticky top-0 z-40 w-full border-b bg-white">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-2">
-            <Link href="/" className="text-xl font-bold text-blue-600">
-              TaskJet
+            <Link href="/" className="flex items-center">
+              <img 
+                src="/images/logo.png" 
+                alt="Tempo Logo" 
+                className="h-8 w-auto" 
+              />
             </Link>
           </div>
           <nav className="hidden md:flex gap-6">
@@ -48,7 +52,7 @@ export default function HomePage() {
               Manage your tasks with power and simplicity
             </h1>
             <p className="max-w-[600px] text-gray-600 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              TaskJet helps you organize tasks, manage projects, and boost productivity with a smart, intuitive interface.
+              Tempo helps you organize tasks, manage projects, and boost productivity with a smart, intuitive interface.
             </p>
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
               <Button size="lg" asChild>
@@ -63,7 +67,7 @@ export default function HomePage() {
             <div className="relative mx-auto aspect-video overflow-hidden rounded-xl border bg-gray-100 md:aspect-square lg:aspect-video w-full max-w-[500px]">
               <div className="flex items-center justify-center h-full bg-gray-200 rounded-lg">
                 <div className="text-center p-4">
-                  <h3 className="text-lg font-medium text-gray-800">TaskJet Dashboard</h3>
+                  <h3 className="text-lg font-medium text-gray-800">Tempo Dashboard</h3>
                   <p className="text-sm text-gray-600">Modern Task Management</p>
                 </div>
               </div>
@@ -83,7 +87,7 @@ export default function HomePage() {
               Everything you need to stay productive
             </h2>
             <p className="max-w-[900px] text-gray-600 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              TaskJet combines powerful features with intuitive design to help you manage your work efficiently.
+              Tempo combines powerful features with intuitive design to help you manage your work efficiently.
             </p>
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-12">
@@ -153,7 +157,7 @@ export default function HomePage() {
               Ready to boost your productivity?
             </h2>
             <p className="max-w-[600px] md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Join thousands of users who are managing their tasks more efficiently with TaskJet.
+              Join thousands of users who are managing their tasks more efficiently with Tempo.
             </p>
           </div>
           <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center lg:justify-end">
@@ -168,7 +172,7 @@ export default function HomePage() {
       <footer className="w-full py-6 md:py-12 border-t">
         <div className="container flex flex-col items-center justify-center gap-4 px-4 md:px-6 md:flex-row md:justify-between text-center md:text-left">
           <div className="text-sm text-gray-500">
-            © {new Date().getFullYear()} TaskJet. All rights reserved.
+            © {new Date().getFullYear()} Tempo. All rights reserved.
           </div>
           <div className="flex gap-4">
             <Link href="#" className="text-sm text-gray-500 hover:text-blue-600">

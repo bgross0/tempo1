@@ -21,10 +21,6 @@
     "id": "..\\node_modules\\@supabase\\storage-js\\dist\\module\\lib\\helpers.js -> @supabase/node-fetch",
     "files": []
   },
-  "hooks\\api\\useTasks.ts -> @/lib/supabase": {
-    "id": "hooks\\api\\useTasks.ts -> @/lib/supabase",
-    "files": []
-  },
   "hooks\\api\\useTasksRealtime.ts -> @/lib/supabase": {
     "id": "hooks\\api\\useTasksRealtime.ts -> @/lib/supabase",
     "files": []

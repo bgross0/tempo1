@@ -396,7 +396,7 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle>Appearance Settings</CardTitle>
                 <CardDescription>
-                  Customize how TaskJet looks
+                  Customize how Tempo looks
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

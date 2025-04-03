@@ -10,6 +10,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "cypress run",
+    "test:integration": "jest --testMatch=\"**/__tests__/**/*.integration.test.(ts|tsx)\"",
+    "test:unit": "jest --testMatch=\"**/__tests__/**/*.test.(ts|tsx)\" --testPathIgnorePatterns=\"**/*.integration.test.(ts|tsx)\"",
+    "test:coverage": "jest --coverage",
     "format": "prettier --write ."
   },
   "dependencies": {

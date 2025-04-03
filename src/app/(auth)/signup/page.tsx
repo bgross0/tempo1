@@ -70,14 +70,14 @@ export default function SignupPage() {
         href="/"
         className="absolute left-4 top-4 md:left-8 md:top-8 text-lg font-bold text-blue-600"
       >
-        TaskJet
+        Tempo
       </Link>
       
       <Card className="mx-auto max-w-md w-full">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
           <CardDescription className="text-center">
-            Enter your details to create your TaskJet account
+            Enter your details to create your Tempo account
           </CardDescription>
         </CardHeader>
         <CardContent>
