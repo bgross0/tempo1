@@ -50,6 +50,40 @@ Visit the testing deployment at: [TaskJet Testing Environment](https://taskjet-s
 - [ ] Navigate between months
 - [ ] Verify that task updates reflect in calendar
 
+### Error Handling (New)
+
+- [ ] Verify error boundaries contain errors and provide recovery options
+- [ ] Test error recovery by intentionally causing component failures
+- [ ] Verify that errors in one component don't crash the entire application
+- [ ] Check that error messages are user-friendly and provide clear next steps
+
+## Developer Testing
+
+### Running Tests
+
+TaskJet includes three types of tests:
+
+1. **Unit Tests**: Test individual functions and components
+   ```bash
+   npm run test:unit
+   ```
+
+2. **Integration Tests**: Test interactions between components
+   ```bash
+   npm run test:integration
+   ```
+
+3. **End-to-End Tests**: Test complete user flows through the application
+   ```bash
+   npm run test:e2e
+   ```
+
+### Test Coverage
+
+- Unit tests: Core business logic and components
+- Integration tests: Component interactions, data flow, state management
+- E2E tests: Complete user journeys through the application
+
 ## Known Limitations
 
 - Smart scheduling algorithm is not yet implemented
@@ -86,5 +120,21 @@ We're particularly interested in feedback on:
 3. Overall app responsiveness and performance
 4. Task and project management workflows (intuitive? missing features?)
 5. User interface and experience
+6. Error handling (do error messages make sense? is recovery intuitive?)
 
 Thank you for helping us improve TaskJet!
+
+## Recent Improvements
+
+### Error Boundaries Implementation
+We've added React Error Boundaries throughout the application to improve resilience. Now if a component crashes, the error is contained, and users can:
+- See a helpful error message
+- Try to recover with a "Retry" button
+- Continue using the rest of the application
+
+### Integration Tests
+We've implemented comprehensive integration tests to verify that components work correctly together. These tests cover:
+- Authentication flows
+- Task list interactions
+- Calendar functionality
+- Error boundary recovery

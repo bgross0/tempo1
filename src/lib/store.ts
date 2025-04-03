@@ -3,6 +3,12 @@ import { create } from 'zustand';
 import { AppState, Task, Project, Event, User } from '@/types';
 
 interface AppStore extends AppState {
+  // UI state from app-store.ts
+  sidebarCollapsed: boolean;
+  darkMode: boolean;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  toggleDarkMode: () => void;
+  
   // Auth actions
   setUser: (user: User | null) => void;
   
@@ -35,6 +41,10 @@ interface AppStore extends AppState {
 }
 
 export const useAppStore = create<AppStore>((set) => ({
+  // UI state from app-store.ts
+  sidebarCollapsed: false,
+  darkMode: false,
+  
   // Initial state
   currentUser: null,
   tasks: [],
@@ -64,6 +74,10 @@ export const useAppStore = create<AppStore>((set) => ({
     notificationTime: '15'
   },
   isGuestMode: false,
+  
+  // UI actions from app-store.ts
+  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+  toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
   
   // Auth actions
   setUser: (user) => set({ currentUser: user }),

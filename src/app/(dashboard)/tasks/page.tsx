@@ -11,10 +11,12 @@ import {
   GridIcon,
   Clock
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { TaskForm } from '@/components/forms/task-form';
+import TaskDialog from '@/components/tasks/TaskDialog';
 import { TaskFormValues } from '@/lib/validations/task';
 import { useTasksRealtime } from '@/hooks/api/useTasksRealtime';
 import { Task } from '@/types/database';
@@ -25,12 +27,14 @@ const TaskItem = ({
   task, 
   onToggleComplete, 
   onEdit, 
-  onDelete 
+  onDelete,
+  setDialogOpen 
 }: { 
   task: Task; 
   onToggleComplete: (id: string, completed: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
+  setDialogOpen: (open: boolean) => void;
 }) => {
   // Format due date
   const formatDate = (dateStr: string) => {
@@ -99,7 +103,10 @@ const TaskItem = ({
       </CardContent>
       <CardFooter className="p-2 pt-0 border-t">
         <div className="flex justify-end gap-2 w-full">
-          <Button variant="ghost" size="sm" onClick={() => onEdit(task)}>
+          <Button variant="ghost" size="sm" onClick={() => {
+              onEdit(task);
+              setDialogOpen(true);
+            }}>
             Edit
           </Button>
           <Button 
@@ -121,11 +128,13 @@ export default function TasksPage() {
   const searchParams = useSearchParams();
   const createParam = searchParams.get('create');
   const filterParam = searchParams.get('filter');
+  const { user } = useAuth();
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   
   // Initial filter state based on URL params
   const [filters, setFilters] = useState({
@@ -141,8 +150,25 @@ export default function TasksPage() {
   useEffect(() => {
     if (createParam === 'true') {
       setIsCreating(true);
+      setDialogOpen(true);
     }
   }, [createParam]);
+
+  // Set dialog open state based on isCreating flag
+  useEffect(() => {
+    if (isCreating) {
+      setDialogOpen(true);
+    }
+  }, [isCreating]);
+  
+  // Handle dialog close
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setIsCreating(false);
+      setSelectedTask(null);
+    }
+  };
 
   // Fetch tasks using our realtime hook
   const {
@@ -173,21 +199,64 @@ export default function TasksPage() {
   // Task handlers
   const handleCreate = async (data: TaskFormValues) => {
     try {
-      await createTask({
+      console.log('Creating task with form values:', JSON.stringify(data, null, 2));
+      
+      // Check for user authentication first
+      if (!user) {
+        console.error('No user found for task creation');
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to create a task",
+          variant: "destructive"
+        });
+        
+        // Redirect to login page after a delay
+        setTimeout(() => {
+          window.location.href = `/login?reason=auth_required&t=${Date.now()}`;
+        }, 1500);
+        return;
+      }
+      
+      // Create task with user ID
+      const createdTask = await createTask({
         ...data,
+        user_id: user.id,
         completed: false,
       });
+      
+      console.log('Task created successfully:', createdTask);
+      
+      // Close create form and show success toast
       setIsCreating(false);
       toast({
         title: "Task created",
         description: "Your task has been successfully created"
       });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to create task",
-        description: "An error occurred while creating the task"
-      });
+      console.error('Failed to create task:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Check for auth errors specifically
+      if (errorMessage.includes('auth') || errorMessage.includes('401')) {
+        toast({
+          title: "Authentication Error",
+          description: "Your session has expired. Please log in again.",
+          variant: "destructive"
+        });
+        
+        // Redirect to login after a delay
+        setTimeout(() => {
+          window.location.href = `/login?reason=session_expired&t=${Date.now()}`;
+        }, 1500);
+      } else {
+        // Generic error handling
+        toast({
+          variant: "destructive",
+          title: "Failed to create task",
+          description: `Error: ${errorMessage}`
+        });
+      }
     }
   };
 
@@ -268,33 +337,15 @@ export default function TasksPage() {
     );
   }
 
-  if (isCreating) {
-    return (
-      <div className="max-w-2xl mx-auto p-4">
-        <h2 className="text-2xl font-bold mb-6">Create New Task</h2>
-        <TaskForm 
-          onSubmit={handleCreate}
-          onCancel={() => setIsCreating(false)}
-        />
-      </div>
-    );
-  }
-
-  if (selectedTask) {
-    return (
-      <div className="max-w-2xl mx-auto p-4">
-        <h2 className="text-2xl font-bold mb-6">Edit Task</h2>
-        <TaskForm 
-          initialData={selectedTask}
-          onSubmit={handleUpdate}
-          onCancel={() => setSelectedTask(null)}
-        />
-      </div>
-    );
-  }
-
   return (
     <div>
+      {/* Add TaskDialog component */}
+      <TaskDialog 
+        task={selectedTask || undefined}
+        open={dialogOpen}
+        onOpenChange={handleDialogOpenChange}
+      />
+      
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold">Tasks</h1>
         <div className="flex gap-2 flex-wrap">
@@ -336,7 +387,10 @@ export default function TasksPage() {
           </Button>
           
           <Button
-            onClick={() => setIsCreating(true)}
+            onClick={() => {
+              setIsCreating(true);
+              setDialogOpen(true);
+            }}
             className="flex items-center gap-1"
           >
             <Plus className="h-4 w-4" />
@@ -422,7 +476,10 @@ export default function TasksPage() {
           {!filters.completed && !filters.overdue && (
             <Button
               className="mt-4"
-              onClick={() => setIsCreating(true)}
+              onClick={() => {
+                setIsCreating(true);
+                setDialogOpen(true);
+              }}
             >
               <Plus className="mr-2 h-4 w-4" />
               New Task
@@ -441,6 +498,7 @@ export default function TasksPage() {
               onEdit={setSelectedTask}
               onDelete={handleDelete}
               onToggleComplete={handleToggleComplete}
+              setDialogOpen={setDialogOpen}
             />
           ))}
         </div>

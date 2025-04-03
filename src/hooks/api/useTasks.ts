@@ -14,49 +14,69 @@ type TaskFilters = {
 
 export function useTasks(filters: TaskFilters = {}) {
   const fetcher = useCallback(async () => {
-    let query = supabase.from('tasks').select('*');
-
-    if (filters.completed !== undefined) {
-      query = query.eq('completed', filters.completed);
-    }
-
-    if (filters.priority) {
-      query = query.eq('priority', filters.priority);
-    }
-
-    // Fix: Handle null project_id properly
-    if (filters.project_id !== undefined) {
-      if (filters.project_id === null) {
-        // Use 'is' for null comparisons in Supabase
-        query = query.is('project_id', null);
-      } else {
-        query = query.eq('project_id', filters.project_id);
+    try {
+      // Import the getAuthenticatedClient function
+      const { getAuthenticatedClient } = await import('@/lib/supabase');
+      
+      try {
+        // Get a fresh authenticated client with proper token
+        console.log('Getting authenticated client for fetching tasks...');
+        const authedClient = await getAuthenticatedClient();
+        console.log('Successfully created authenticated client for fetching');
+        
+        // Start building query with authenticated client
+        let query = authedClient.from('tasks').select('*');
+    
+        if (filters.completed !== undefined) {
+          query = query.eq('completed', filters.completed);
+        }
+    
+        if (filters.priority) {
+          query = query.eq('priority', filters.priority);
+        }
+    
+        // Fix: Handle null project_id properly
+        if (filters.project_id !== undefined) {
+          if (filters.project_id === null) {
+            // Use 'is' for null comparisons in Supabase
+            query = query.is('project_id', null);
+          } else {
+            query = query.eq('project_id', filters.project_id);
+          }
+        }
+    
+        if (filters.tags && filters.tags.length > 0) {
+          query = query.contains('tags', filters.tags);
+        }
+    
+        if (filters.due_date_start) {
+          query = query.gte('due_date', filters.due_date_start);
+        }
+    
+        if (filters.due_date_end) {
+          query = query.lte('due_date', filters.due_date_end);
+        }
+    
+        // Always order by due date
+        query = query.order('due_date', { ascending: true });
+    
+        const { data, error } = await query;
+    
+        if (error) {
+          console.error('Error fetching tasks:', error);
+          throw error;
+        }
+    
+        return data as Task[];
+      } catch (authError) {
+        // Handle authentication errors gracefully
+        console.error('Authentication error during task fetching:', authError);
+        return []; // Return empty array for auth errors
       }
+    } catch (error) {
+      console.error('Exception during fetching tasks:', error);
+      return []; // Return empty array to avoid breaking the UI
     }
-
-    if (filters.tags && filters.tags.length > 0) {
-      query = query.contains('tags', filters.tags);
-    }
-
-    if (filters.due_date_start) {
-      query = query.gte('due_date', filters.due_date_start);
-    }
-
-    if (filters.due_date_end) {
-      query = query.lte('due_date', filters.due_date_end);
-    }
-
-    // Always order by due date
-    query = query.order('due_date', { ascending: true });
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching tasks:', error);
-      throw error;
-    }
-
-    return data as Task[];
   }, [
     filters.completed,
     filters.priority,
@@ -73,63 +93,71 @@ export function useTasks(filters: TaskFilters = {}) {
 
   const createTask = useCallback(
     async (newTask: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
-      console.log('Creating task - DATA BEFORE VALIDATION:', JSON.stringify(newTask, null, 2));
-      
-      // MANUAL VALIDATION: Ensure all required fields exist with proper types
-      if (!newTask.name) {
-        throw new Error('Task name is required');
-      }
-      
-      if (!newTask.due_date) {
-        throw new Error('Due date is required');
-      }
-
-      if (!newTask.user_id) {
-        throw new Error('User ID is required');
-      }
-      
-      // ENSURE PROPER TYPES: Explicit type checking for all fields
-      const validatedTask = {
-        name: String(newTask.name),
-        user_id: String(newTask.user_id),
-        due_date: String(newTask.due_date),
-        priority: newTask.priority || 'medium',
-        description: newTask.description === undefined ? null : String(newTask.description),
-        start_date: newTask.start_date === undefined ? null : String(newTask.start_date),
-        start_time: newTask.start_time === undefined ? null : String(newTask.start_time),
-        due_time: newTask.due_time === undefined ? null : String(newTask.due_time),
-        duration: newTask.duration === undefined ? null : Number(newTask.duration),
-        chunk_size: newTask.chunk_size === undefined ? null : Number(newTask.chunk_size),
-        hard_deadline: Boolean(newTask.hard_deadline),
-        completed: Boolean(newTask.completed),
-        completed_at: newTask.completed_at === undefined ? null : String(newTask.completed_at),
-        project_id: newTask.project_id === undefined ? null : String(newTask.project_id),
-        tags: Array.isArray(newTask.tags) ? newTask.tags : [],
-        scheduled_blocks: null // Always set to null for new tasks
-      };
-      
-      console.log('Creating task - VALIDATED DATA:', JSON.stringify(validatedTask, null, 2));
+      console.log('Creating task with data:', JSON.stringify(newTask, null, 2));
       
       try {
-        // Add apikey explicitly to this request
-        const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        // First, make sure we have a user_id
+        if (!newTask.user_id) {
+          console.error('ERROR: Missing user_id in task creation data');
+          // Get current session to extract user ID
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (!sessionData.session || !sessionData.session.user) {
+            throw new Error('User not authenticated - Cannot create task without a user ID');
+          }
+          
+          console.log('Extracted user ID from session:', sessionData.session.user.id);
+          newTask = {
+            ...newTask,
+            user_id: sessionData.session.user.id
+          };
+        }
         
-        const { data, error } = await supabase
+        // Get fresh authenticated client first
+        const { getAuthenticatedClient } = await import('@/lib/supabase');
+        
+        console.log('Getting authenticated client for task creation...');
+        const authedClient = await getAuthenticatedClient();
+        console.log('Successfully created authenticated client for task creation');
+        
+        // Create a minimal task object with only required fields to avoid format issues
+        const taskData = {
+          user_id: String(newTask.user_id),
+          name: String(newTask.name).trim(),
+          due_date: String(newTask.due_date),
+          priority: (newTask.priority === 'high' || newTask.priority === 'medium' || newTask.priority === 'low') 
+            ? newTask.priority 
+            : 'medium',
+          completed: false,
+          tags: Array.isArray(newTask.tags) ? newTask.tags : []
+        };
+        
+        console.log('Sending task data to Supabase:', JSON.stringify(taskData, null, 2));
+        
+        // Use the authenticated client for task creation
+        const { data, error } = await authedClient
           .from('tasks')
-          .insert(validatedTask)
+          .insert(taskData)
           .select();
         
         if (error) {
-          console.error('SUPABASE ERROR creating task:', error);
-          console.error('ERROR DETAILS:', error.details, error.hint, error.message);
+          console.error('Error creating task:', error);
           throw error;
         }
         
-        console.log('Task created successfully:', data);
+        if (!data || data.length === 0) {
+          console.error('No data returned from task creation');
+          throw new Error('Failed to create task: No data returned');
+        }
+        
+        console.log('Task created successfully, received data:', data);
+        
+        // Update the local cache with the new data
         mutate();
+        
+        // Return the created task
         return data[0] as Task;
       } catch (error) {
-        console.error('EXCEPTION creating task:', error);
+        console.error('Exception during task creation:', error);
         throw error;
       }
     },
@@ -138,33 +166,70 @@ export function useTasks(filters: TaskFilters = {}) {
 
   const updateTask = useCallback(
     async (id: string, updates: Partial<Omit<Task, 'id' | 'created_at' | 'updated_at'>>) => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update(updates)
-        .eq('id', id)
-        .select();
-      
-      if (error) {
-        console.error('Error updating task:', error);
+      try {
+        console.log('Updating task:', id, 'with data:', updates);
+        
+        // Import the getAuthenticatedClient function
+        const { getAuthenticatedClient } = await import('@/lib/supabase');
+        
+        // Get a fresh authenticated client with proper token
+        console.log('Getting authenticated client for task update...');
+        const authedClient = await getAuthenticatedClient();
+        console.log('Successfully created authenticated client for update');
+        
+        // Update the task using the authenticated client
+        const { data, error } = await authedClient
+          .from('tasks')
+          .update(updates)
+          .eq('id', id)
+          .select();
+        
+        if (error) {
+          console.error('Error updating task:', error);
+          throw error;
+        }
+        
+        console.log('Task updated successfully');
+        mutate();
+        return data[0] as Task;
+      } catch (error) {
+        console.error('Exception during task update:', error);
         throw error;
       }
-      
-      mutate();
-      return data[0] as Task;
     },
     [mutate]
   );
 
   const deleteTask = useCallback(
     async (id: string) => {
-      const { error } = await supabase.from('tasks').delete().eq('id', id);
-      
-      if (error) {
-        console.error('Error deleting task:', error);
+      try {
+        console.log('Deleting task:', id);
+        
+        // Import the getAuthenticatedClient function
+        const { getAuthenticatedClient } = await import('@/lib/supabase');
+        
+        // Get a fresh authenticated client with proper token
+        console.log('Getting authenticated client for task deletion...');
+        const authedClient = await getAuthenticatedClient();
+        console.log('Successfully created authenticated client for deletion');
+        
+        // Delete the task using the authenticated client
+        const { error } = await authedClient
+          .from('tasks')
+          .delete()
+          .eq('id', id);
+        
+        if (error) {
+          console.error('Error deleting task:', error);
+          throw error;
+        }
+        
+        console.log('Task deleted successfully');
+        mutate();
+      } catch (error) {
+        console.error('Exception during task deletion:', error);
         throw error;
       }
-      
-      mutate();
     },
     [mutate]
   );

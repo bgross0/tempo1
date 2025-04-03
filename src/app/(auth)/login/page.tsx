@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -12,12 +13,29 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LoginPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const { signIn } = useAuth();
+  const { signIn, user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [redirectPath, setRedirectPath] = useState('/dashboard');
+  const [showErrorReset, setShowErrorReset] = useState(false);
+  
+  // Check for already authenticated users and handle redirection
+  useEffect(() => {
+    console.log('Login page mounted, checking auth state...');
+    
+    // Very simple check - if user exists, redirect directly to dashboard
+    // with a full page navigation, bypassing Next.js routing entirely
+    if (user) {
+      console.log('User already authenticated, redirecting to dashboard');
+      // Force a full page reload to the dashboard with absolute URL
+      // Use dynamically created absolute URL in case we're not on localhost
+      const baseUrl = window.location.origin;
+      window.location.assign(`${baseUrl}/dashboard`);
+    }
+  }, [user]);
   
   // Get the redirectTo parameter if present
   useEffect(() => {
@@ -26,57 +44,152 @@ export default function LoginPage() {
       console.log('Found redirectTo parameter:', redirectTo);
       setRedirectPath(redirectTo);
     }
+    
+    // Check for error indicators in the URL
+    const reason = searchParams.get('reason');
+    const error = searchParams.get('error');
+    
+    // Handle auth loop detection
+    if (error === 'auth_loop') {
+      setShowErrorReset(true);
+      toast({
+        variant: "destructive",
+        title: "Authentication Loop Detected",
+        description: "We've detected an authentication redirect loop. Please reset your auth state to continue.",
+      });
+    }
+    // Handle other auth errors
+    else if (reason === 'auth_error') {
+      setShowErrorReset(true);
+      toast({
+        variant: "destructive",
+        title: "Authentication error",
+        description: "There was a problem with your authentication state. Please log in again.",
+      });
+    }
   }, [searchParams]);
 
+  // Using direct Supabase authentication with detailed debugging
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      console.log('Attempting to sign in with:', { email });
+      console.log('=========== LOGIN ATTEMPT ===========');
+      console.log(`Attempting login with: ${email}`);
       
-      // Use direct Supabase auth like in simple-login
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // DEBUGGING: Check if we already have a session before login
+      const { data: existingSession } = await supabase.auth.getSession();
+      console.log('Pre-login session check:', existingSession.session ? 'Session exists' : 'No session');
+      
+      // CRITICAL FIX: DO NOT sign out before signing in!
+      // This was causing auth state flicker and redirect loops
+      
+      // We leave any existing session in place
+      console.log('Proceeding with login WITHOUT clearing existing state');
+      
+      // Direct authentication with Supabase
+      console.log('Executing signInWithPassword...');
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
       
       if (error) {
-        console.error('Login error:', error);
+        console.error('LOGIN ERROR:', error.message);
+        
         toast({
           variant: "destructive",
           title: "Login failed",
           description: error.message || "Please check your credentials",
         });
-      } else {
-        // Log session info to help with debugging
-        console.log('Login successful! Session:', data.session ? 'exists' : 'missing');
-        if (data.session) {
-          console.log('User:', data.session.user.email);
-          console.log('Session expires:', new Date(data.session.expires_at * 1000).toISOString());
-        }
+        
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('Login API call succeeded');
+      console.log('Session created:', !!data.session);
+      
+      if (data.session) {
+        console.log('User:', data.user?.email);
+        console.log('Access token present:', !!data.session.access_token);
+        console.log('Token expires at:', new Date(data.session.expires_at * 1000).toISOString());
         
         toast({
           title: "Login successful",
-          description: `Redirecting to ${redirectPath === '/dashboard' ? 'dashboard' : 'requested page'}...`,
+          description: "Redirecting to dashboard...",
         });
         
-        // Use a longer delay to ensure cookies are properly set before navigation
-        // This is crucial for the auth flow to work correctly
-        setTimeout(() => {
-          console.log('Redirecting to:', redirectPath);
-          window.location.href = redirectPath;
-        }, 1000);
+        // Delay to allow session to be properly stored
+        console.log('Waiting briefly for session storage...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // DEBUGGING: Verify session was properly stored
+        const { data: verifySession } = await supabase.auth.getSession();
+        console.log('Post-login session check:', verifySession.session ? 'Session stored' : 'No session stored!');
+        
+        console.log('Redirecting to dashboard with window.location.replace...');
+        // Replace current location entirely to avoid navigation history issues
+        window.location.replace('/dashboard');
+      } else {
+        console.error('Login succeeded but no session was created!');
+        toast({
+          variant: "destructive", 
+          title: "Login failed",
+          description: "Authentication succeeded but no session was created. Please try again.",
+        });
+        setIsLoading(false);
       }
     } catch (err) {
-      console.error('Unexpected error during login:', err);
+      console.error('UNEXPECTED ERROR DURING LOGIN:', err);
       toast({
         variant: "destructive",
         title: "An unexpected error occurred",
         description: err instanceof Error ? err.message : "Please try again later",
       });
-    } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // Comprehensive function to reset auth state if needed
+  const handleResetAuthState = async () => {
+    try {
+      console.log('Performing complete auth state reset...');
+      
+      // First sign out of Supabase with full scope
+      await supabase.auth.signOut({ scope: 'local' });
+      
+      // Clear localStorage items
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('taskjet-auth-storage');
+        localStorage.removeItem('supabase-auth-token');
+      }
+      
+      // Clear cookies
+      if (typeof document !== 'undefined') {
+        document.cookie = 'supabase-auth-token=;path=/;max-age=0';
+        document.cookie = 'taskjet-auth-storage=;path=/;max-age=0';
+      }
+      
+      // Show toast message
+      toast({
+        title: "Auth state reset",
+        description: "Your authentication state has been reset. The page will reload.",
+      });
+      
+      // Wait briefly so the user sees the toast
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Force reload the page with a cache-busting parameter
+      window.location.href = `/login?reset=true&t=${Date.now()}`;
+    } catch (err) {
+      console.error('Error resetting auth state:', err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to reset authentication state. Please try again."
+      });
     }
   };
 
@@ -95,6 +208,39 @@ export default function LoginPage() {
           <CardDescription className="text-center">
             Enter your email and password to access your account
           </CardDescription>
+          
+          {showErrorReset && (
+            <div className="bg-red-50 p-4 rounded-md mt-2 border border-red-200">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Authentication Error Detected</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>
+                      We've detected an issue with your authentication state, which may be causing redirect loops 
+                      or preventing you from logging in properly.
+                    </p>
+                    <p className="mt-1">
+                      Please try resetting your authentication state to fix this issue.
+                    </p>
+                  </div>
+                  <div className="mt-3">
+                    <Button 
+                      variant="destructive" 
+                      className="w-full"
+                      onClick={handleResetAuthState}
+                    >
+                      Reset Authentication State
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleSubmit}>

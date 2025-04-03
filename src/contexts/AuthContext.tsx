@@ -24,96 +24,129 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Using the minimal proven approach for session management
   useEffect(() => {
-    // Get initial session with better error handling
+    console.log('=========== AUTH CONTEXT INITIALIZATION ===========');
+    let mounted = true;
+    
+    // Get initial session
     const getInitialSession = async () => {
       try {
-        // First try to refresh the session to ensure we have the latest
-        await supabase.auth.refreshSession();
+        setIsLoading(true);
         
-        // Then get the current session
+        // Get the session - NO refresh before this to avoid state issues
+        console.log('Getting initial session...');
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting initial session:', error.message);
-          setIsLoading(false);
           return;
         }
         
-        if (data.session) {
-          console.log('Initial session loaded for:', data.session.user.email);
-          setSession(data.session);
-          setUser(data.session.user);
-        } else {
-          console.log('No initial session found');
+        // Set initial state if component still mounted
+        if (mounted) {
+          if (data.session) {
+            console.log('Initial session found for user:', data.session.user.email);
+            setSession(data.session);
+            setUser(data.session.user);
+          } else {
+            console.log('No initial session found');
+            setSession(null);
+            setUser(null);
+          }
         }
       } catch (err) {
         console.error('Unexpected error during session check:', err);
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     };
     
     getInitialSession();
-
-    // Listen for auth changes with improved logging
+    
+    // Set up auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, currentSession) => {
         console.log('Auth state changed:', event);
         
-        if (session) {
-          console.log('New session for:', session.user.email);
-          setSession(session);
-          setUser(session.user);
-          
-          // For sign_in events, we want to refresh the page to ensure
-          // all components have the latest session data
-          if (event === 'SIGNED_IN') {
-            console.log('User signed in, refreshing session state');
-          }
-        } else {
-          console.log('Session ended');
-          setSession(null);
-          setUser(null);
-          
-          // For sign_out events, redirect to login
-          if (event === 'SIGNED_OUT') {
-            console.log('User signed out, redirecting to login');
-            window.location.href = '/login';
+        if (mounted) {
+          if (currentSession) {
+            console.log('Session in auth state change for:', currentSession.user.email);
+            setSession(currentSession); 
+            setUser(currentSession.user);
+          } else {
+            console.log('No session in auth state change');
+            setSession(null);
+            setUser(null);
           }
         }
       }
     );
-
+    
+    // Cleanup
     return () => {
-      console.log('Unsubscribing from auth state changes');
+      console.log('Unmounting AuthContext...');
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
+  // Authentication methods following the official Supabase patterns
   const signIn = async (email: string, password: string) => {
-    const response = await supabase.auth.signInWithPassword({ email, password });
-    return response;
+    console.log('Signing in with email/password');
+    
+    try {
+      const response = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('Error during sign in:', error);
+      throw error;
+    }
   };
 
   const signUp = async (email: string, password: string) => {
-    const response = await supabase.auth.signUp({ email, password });
-    return response;
+    console.log('Signing up with email/password');
+    
+    try {
+      const response = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('Error during sign up:', error);
+      throw error;
+    }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error.message);
-    } else {
-      // Make sure to clear the state
+    console.log('Signing out');
+    
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error signing out:', error.message);
+        throw error;
+      }
+      
+      // Clear state immediately for better UX
       setUser(null);
       setSession(null);
       
-      // Redirect to login page after a small delay
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 500);
+      // Let middleware handle the redirect
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      throw error;
     }
   };
 

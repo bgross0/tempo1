@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -16,6 +16,7 @@ import { useTasks } from '@/hooks/api/useTasks';
 import { TaskFormValues } from '@/lib/validations/task';
 import { Task } from '@/types/database';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface TaskDialogProps {
   task?: Task;
@@ -37,66 +38,122 @@ export default function TaskDialog({
   const isControlled = controlledOpen !== undefined && setControlledOpen !== undefined;
   const isOpen = isControlled ? controlledOpen : open;
   const setIsOpen = isControlled ? setControlledOpen : setOpen;
+  
+  // Debug 
+  useEffect(() => {
+    console.log('TaskDialog rendered with:', { 
+      task: task?.id || 'none',
+      isControlled,
+      isOpen,
+      hasUser: !!user
+    });
+  }, [task, isControlled, isOpen, user]);
 
   const handleSubmit = async (data: TaskFormValues) => {
     try {
+      // Check if the user is authenticated
       if (!user) {
         toast({
-          title: "Error",
+          title: "Authentication Error",
           description: "You must be logged in to create or update a task.",
           variant: "destructive"
         });
+        
+        // Redirect to login
+        window.location.href = `/login?reason=auth_required&t=${Date.now()}`;
         return;
       }
 
-      console.log('Task submission with form data:', data);
+      console.log('Submitting task form with data:', JSON.stringify(data, null, 2));
+      console.log('Current authenticated user ID:', user.id);
+      
+      // Fresh session check with simple retry logic
+      console.log('Validating session before task operation...');
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session validation error:', sessionError);
+        throw new Error('Authentication failed: ' + sessionError.message);
+      }
+      
+      if (!sessionData.session) {
+        console.log('No session found, attempting to refresh...');
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshData.session) {
+          console.error('Session refresh failed:', refreshError);
+          toast({
+            title: "Authentication Error",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive"
+          });
+          
+          // Redirect to login
+          window.location.href = `/login?reason=expired_session&t=${Date.now()}`;
+          return;
+        }
+        
+        console.log('Session refreshed successfully');
+      } else {
+        console.log('Active session found for user:', sessionData.session.user.email);
+      }
       
       if (task) {
         // Update existing task
-        await updateTask(task.id, {
-          ...data,
-        });
+        console.log('Updating existing task:', task.id);
+        await updateTask(task.id, data);
         
         toast({
           title: "Task updated",
           description: "Your task has been successfully updated."
         });
       } else {
-        // Create new task
-        await createTask({
-          user_id: user.id,
-          name: data.name,
-          description: data.description || null,
-          start_date: data.start_date || null,
-          start_time: data.start_time || null,
-          due_date: data.due_date,
-          due_time: data.due_time || null,
-          priority: data.priority || 'medium',
-          duration: data.duration || null,
-          chunk_size: data.chunk_size || null,
-          hard_deadline: data.hard_deadline || false,
-          completed: false,
-          completed_at: null,
-          project_id: data.project_id || null,
-          tags: data.tags || [],
-          scheduled_blocks: null // Set to null for new tasks
-        });
+        // Create new task with properly formatted data
+        console.log('Creating new task for user ID:', user.id);
         
+        // Prepare task data, ensuring the user_id is included
+        const taskData = {
+          ...data,
+          user_id: user.id,
+          completed: false
+        };
+        
+        console.log('Sending task creation request with data:', JSON.stringify(taskData, null, 2));
+        const createdTask = await createTask(taskData);
+        
+        console.log('Task created successfully with ID:', createdTask.id);
         toast({
           title: "Task created",
           description: "Your task has been successfully created."
         });
       }
       
+      // Close the dialog
       setIsOpen(false);
     } catch (error) {
       console.error('Error handling task submission:', error);
       
-      toast({
-        title: "Error",
-        description: "There was an error processing your task.",
-        variant: "destructive"
-      });
+      // Determine the error type and show appropriate message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (errorMessage.includes('401') || errorMessage.includes('auth')) {
+        toast({
+          title: "Authentication Error",
+          description: "Your session has expired. Please log in again.",
+          variant: "destructive"
+        });
+        
+        // Redirect to login after a small delay
+        setTimeout(() => {
+          window.location.href = `/login?reason=auth_error&t=${Date.now()}`;
+        }, 1000);
+      } else {
+        toast({
+          title: "Error",
+          description: "There was an error processing your task: " + errorMessage,
+          variant: "destructive"
+        });
+      }
     }
   };
 
