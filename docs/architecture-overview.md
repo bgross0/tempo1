@@ -1,8 +1,8 @@
-# TaskJet Architecture Overview
+# Tempo Architecture Overview
 
 ## 1. High-Level Architecture
 
-TaskJet follows a modern web application architecture with a clear separation of concerns:
+Tempo follows a modern web application architecture with a clear separation of concerns:
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
@@ -33,7 +33,7 @@ TaskJet follows a modern web application architecture with a clear separation of
 
 ## 2. Component Hierarchy
 
-TaskJet's UI is organized in a hierarchical component structure:
+Tempo's UI is organized in a hierarchical component structure:
 
 ```
 ┌─ AppShell ──────────────────────────────────────────────────┐
@@ -74,7 +74,7 @@ TaskJet's UI is organized in a hierarchical component structure:
 
 ## 3. Data Flow Architecture
 
-TaskJet uses a combination of server-side and client-side data fetching patterns:
+Tempo uses a combination of server-side and client-side data fetching patterns:
 
 ### Server-Side Data Flow
 1. **Server Components** fetch data directly from Supabase during server rendering
@@ -165,7 +165,7 @@ TaskJet uses a combination of server-side and client-side data fetching patterns
 
 ## 4. State Management Architecture
 
-TaskJet uses a hybrid state management approach:
+Tempo uses a hybrid state management approach:
 
 ### Global State (Zustand)
 - User preferences
@@ -222,7 +222,7 @@ const [isExpanded, setIsExpanded] = useState(false);
 
 ## 5. Authentication Flow
 
-TaskJet uses Supabase Auth for authentication:
+Tempo uses Supabase Auth for authentication:
 
 1. **Login Flow**
 ```
@@ -273,7 +273,7 @@ TaskJet uses Supabase Auth for authentication:
 
 ## 6. Database Structure
 
-TaskJet's database is built on PostgreSQL with the following structure:
+Tempo's database is built on PostgreSQL with the following structure:
 
 ```
 ┌───────────────┐       ┌───────────────┐
@@ -302,7 +302,7 @@ TaskJet's database is built on PostgreSQL with the following structure:
 
 ## 7. API Architecture
 
-TaskJet provides several types of APIs:
+Tempo provides several types of APIs:
 
 ### RESTful API Endpoints (Next.js API Routes)
 - Standard CRUD operations
@@ -339,7 +339,7 @@ const { data, error } = await supabase
 
 ## 8. Deployment Architecture
 
-TaskJet is deployed on Vercel with the following architecture:
+Tempo is deployed on Vercel with the following architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -386,7 +386,7 @@ TaskJet is deployed on Vercel with the following architecture:
 
 ## 9. Security Architecture
 
-TaskJet implements multiple layers of security:
+Tempo implements multiple layers of security:
 
 ### Authentication Security
 - PKCE flow for OAuth providers
@@ -409,7 +409,7 @@ TaskJet implements multiple layers of security:
 
 ## 10. Performance Architecture
 
-TaskJet is built for performance:
+Tempo is built for performance:
 
 ### Frontend Performance
 - Next.js Static Generation where possible
@@ -431,7 +431,7 @@ TaskJet is built for performance:
 
 ## 11. Scalability Architecture
 
-TaskJet is designed to scale:
+Tempo is designed to scale:
 
 ### Horizontal Scaling
 - Stateless application design

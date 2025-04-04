@@ -7,7 +7,7 @@ import { useTasksRealtime } from '@/hooks/api/useTasksRealtime';
 import { useEventsRealtime } from '@/hooks/api/useEventsRealtime';
 import { useAppStore } from '@/lib/store';
 import { Event as CalendarEvent, Task } from '@/types';
-import Calendar from '@/components/calendar/Calendar';
+import { CalendarView } from '@/features/calendar/calendar-view';
 import MiniCalendar from '@/components/calendar/MiniCalendar';
 
 export default function CalendarPage() {
@@ -149,7 +149,7 @@ export default function CalendarPage() {
       
       {/* Main calendar */}
       <div className="flex-1">
-        <Calendar />
+        <CalendarView />
       </div>
     </div>
   );

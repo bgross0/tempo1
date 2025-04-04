@@ -34,7 +34,7 @@ export function KeyboardShortcutsDialog() {
         </DialogHeader>
         <div className="space-y-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            Use these keyboard shortcuts to navigate TaskJet quickly.
+            Use these keyboard shortcuts to navigate Tempo quickly.
           </div>
           <table className="w-full text-sm">
             <tbody>

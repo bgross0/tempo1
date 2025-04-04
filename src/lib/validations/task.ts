@@ -11,7 +11,7 @@ export const taskSchema = z.object({
   }),
   due_time: z.string().nullable().optional(),
   priority: z.enum(['high', 'medium', 'low']),
-  duration: z.number().nullable().optional(),
+  duration: z.number().min(1, 'Duration is required').default(30),
   chunk_size: z.number().nullable().optional(),
   hard_deadline: z.boolean().default(false),
   project_id: z.string().nullable().optional(),

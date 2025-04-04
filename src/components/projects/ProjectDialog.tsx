@@ -55,8 +55,15 @@ export default function ProjectDialog({
 
         await createProject({
           user_id: sessionData.session.user.id,
-          ...data,
-          completed: false
+          // Ensure description is never undefined, using null instead
+          description: data.description || null,  
+          name: data.name,
+          priority: data.priority,
+          due_date: data.due_date,
+          start_date: data.start_date,
+          tags: data.tags || [],
+          completed: false,
+          completed_at: null
         });
         toast({
           title: "Project created",

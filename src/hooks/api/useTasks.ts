@@ -133,7 +133,7 @@ export function useTasks(filters: TaskFilters = {}) {
             ? newTask.priority 
             : 'medium',
           status: newTask.status || 'todo',
-          duration: newTask.duration,
+          duration: newTask.duration || 30, // Duration is required in the database
           chunk_size: newTask.chunk_size,
           hard_deadline: Boolean(newTask.hard_deadline),
           completed: Boolean(newTask.completed),

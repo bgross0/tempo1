@@ -7,10 +7,15 @@ import { useAppStore } from '@/lib/store/app-store';
 export function ViewSelector() {
   const { viewMode, setViewMode } = useAppStore();
   
+  // Ensure viewMode is a valid value, defaulting to kanban if somehow undefined
+  const currentViewMode = viewMode === 'kanban' || viewMode === 'list' || viewMode === 'table' 
+    ? viewMode 
+    : 'kanban';
+  
   return (
     <div className="flex border rounded-md p-1 bg-white dark:bg-gray-800">
       <Button
-        variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+        variant={currentViewMode === 'kanban' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => setViewMode('kanban')}
         className="px-2"
@@ -19,7 +24,7 @@ export function ViewSelector() {
         <LayoutGrid className="h-4 w-4" />
       </Button>
       <Button
-        variant={viewMode === 'list' ? 'default' : 'ghost'}
+        variant={currentViewMode === 'list' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => setViewMode('list')}
         className="px-2"
@@ -28,7 +33,7 @@ export function ViewSelector() {
         <List className="h-4 w-4" />
       </Button>
       <Button
-        variant={viewMode === 'table' ? 'default' : 'ghost'}
+        variant={currentViewMode === 'table' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => setViewMode('table')}
         className="px-2"

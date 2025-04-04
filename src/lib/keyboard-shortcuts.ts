@@ -1,4 +1,4 @@
-import { KeyboardEvent } from 'react';
+import { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useAppStore } from '@/lib/store/app-store';
 import { useRouter } from 'next/navigation';
 
@@ -80,7 +80,7 @@ export function useKeyboardShortcuts() {
     }
   ];
   
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = (e: ReactKeyboardEvent | globalThis.KeyboardEvent) => {
     // Don't trigger shortcuts when typing in inputs
     if (e.target instanceof HTMLInputElement || 
         e.target instanceof HTMLTextAreaElement) {

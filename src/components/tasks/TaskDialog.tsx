@@ -116,11 +116,25 @@ export default function TaskDialog({
         // Create new task with properly formatted data
         console.log('Creating new task for user ID:', user.id);
         
-        // Prepare task data, ensuring the user_id is included
+        // Prepare task data, ensuring the user_id is included and all required fields have appropriate types
         const taskData = {
-          ...data,
           user_id: user.id,
-          completed: false
+          name: data.name,
+          description: data.description || null,
+          start_date: data.start_date || null,
+          start_time: data.start_time || null,
+          due_date: data.due_date,
+          due_time: data.due_time || null,
+          priority: data.priority,
+          duration: data.duration || 30, // Default to 30 minutes as duration is required in the database
+          chunk_size: data.chunk_size || null,
+          hard_deadline: data.hard_deadline || false,
+          tags: data.tags || [],
+          completed: false,
+          completed_at: null,
+          scheduled_blocks: null,
+          status: data.status || 'todo',
+          project_id: data.project_id || null
         };
         
         console.log('Sending task creation request with data:', JSON.stringify(taskData, null, 2));

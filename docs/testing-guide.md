@@ -1,14 +1,14 @@
-# TaskJet - Internal Testing Guide
+# Tempo - Internal Testing Guide
 
 ## Overview
 
-TaskJet is a modern task management application designed to help users organize their tasks, projects, and schedule efficiently. This guide provides instructions for internal testers to help identify bugs, usability issues, and suggest improvements.
+Tempo is a modern task management application designed to help users organize their tasks, projects, and schedule efficiently. This guide provides instructions for internal testers to help identify bugs, usability issues, and suggest improvements.
 
 ## Getting Started
 
 ### Access
 
-Visit the testing deployment at: [TaskJet Testing Environment](https://taskjet-staging.vercel.app)
+Visit the testing deployment at: [Tempo Testing Environment](https://tempo-staging.vercel.app)
 
 ### Account Setup
 
@@ -70,7 +70,7 @@ Visit the testing deployment at: [TaskJet Testing Environment](https://taskjet-s
 
 ### Running Tests
 
-TaskJet includes three types of tests:
+Tempo includes three types of tests:
 
 1. **Unit Tests**: Test individual functions and components
    ```bash
@@ -121,7 +121,7 @@ Screenshots: [If applicable]
 Device/Browser: [Your device and browser information]
 ```
 
-Send all feedback to: testing@taskjet.com or use the GitHub issue template.
+Send all feedback to: testing@tempo.com or use the GitHub issue template.
 
 ## Feedback Priorities
 
@@ -134,7 +134,7 @@ We're particularly interested in feedback on:
 5. User interface and experience
 6. Error handling (do error messages make sense? is recovery intuitive?)
 
-Thank you for helping us improve TaskJet!
+Thank you for helping us improve Tempo!
 
 ## Recent Improvements
 

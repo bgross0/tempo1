@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task } from '@/types';
+import { Task } from '@/types/index';
 import { useAppStore } from '@/lib/store';
 import { Check, Clock, AlertCircle } from 'lucide-react';
 import { format, isPast } from 'date-fns';

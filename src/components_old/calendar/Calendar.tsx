@@ -1,8 +1,8 @@
 import React from 'react';
 import { useAppStore } from '@/lib/store';
-import DayView from './DayView';
-import WeekView from './WeekView';
-import MonthView from './MonthView';
+import DayView from '@/components/calendar/DayView';
+import WeekView from '@/components/calendar/WeekView';
+import MonthView from '@/components/calendar/MonthView';
 import { addDays, addMonths, addWeeks, format, subDays, subMonths, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MoreHorizontal } from 'lucide-react';
 

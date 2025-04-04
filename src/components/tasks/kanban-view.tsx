@@ -2,7 +2,8 @@
 
 import { DragEvent, useState } from 'react';
 import { Task } from '@/types/database';
-import TaskCard from '@/components/tasks/TaskCard';
+import TaskCard from '@/components/dashboard/TaskCard';
+// Already using database Task type, no conversion needed
 
 interface KanbanColumnProps {
   title: string;

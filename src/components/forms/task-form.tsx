@@ -47,7 +47,7 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
     due_date: initialData?.due_date || format(new Date(), 'yyyy-MM-dd'),
     due_time: initialData?.due_time || null,
     priority: initialData?.priority || 'medium',
-    duration: initialData?.duration || null,
+    duration: initialData?.duration || 30, // Default to 30 minutes as duration is required
     chunk_size: initialData?.chunk_size || null,
     hard_deadline: initialData?.hard_deadline || false,
     project_id: initialData?.project_id || null,
@@ -238,7 +238,7 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
               <FormItem>
                 <FormLabel>Project (Optional)</FormLabel>
                 <ProjectSelector
-                  value={field.value}
+                  value={field.value || null}
                   onChange={field.onChange}
                 />
                 <FormMessage />
@@ -253,18 +253,22 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
             name="duration"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Duration (minutes, optional)</FormLabel>
+                <FormLabel>Duration (minutes)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     {...field}
-                    value={field.value === null ? '' : field.value}
+                    value={field.value === null ? '30' : field.value}
                     onChange={(e) => {
-                      const value = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                      // Default to 30 minutes if empty or null (duration appears to be required in DB)
+                      const value = e.target.value === '' ? 30 : parseInt(e.target.value, 10);
                       field.onChange(value);
                     }}
                   />
                 </FormControl>
+                <FormDescription>
+                  Estimated time to complete this task (required for scheduling)
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

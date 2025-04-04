@@ -1,8 +1,9 @@
 "use client"
 
 import { Activity, CheckCircle, Clock, Calendar, BarChart3, Target, AlertCircle } from "lucide-react"
+import React from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { MiniCalendar } from "@/components/calendar/MiniCalendar"
+import MiniCalendar from "@/components/calendar/MiniCalendar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -274,7 +275,7 @@ export function ProductivityDashboard() {
 }
 
 // Missing import components
-function ChevronDown(props) {
+function ChevronDown(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -293,7 +294,7 @@ function ChevronDown(props) {
   )
 }
 
-function Plus(props) {
+function Plus(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

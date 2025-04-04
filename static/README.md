@@ -1,4 +1,4 @@
-# TaskJet Static Resources
+# Tempo Static Resources
 
 This directory contains static HTML templates and utility files that are not part of the Next.js application itself but may be used for development, testing, or emergency fixes.
 

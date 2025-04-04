@@ -1,6 +1,6 @@
-# TaskJet Database Resources
+# Tempo Database Resources
 
-This directory contains database-related resources for the TaskJet application.
+This directory contains database-related resources for the Tempo application.
 
 ## Directory Structure
 

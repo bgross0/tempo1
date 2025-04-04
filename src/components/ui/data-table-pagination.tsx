@@ -4,7 +4,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react"
-import { Table } from "@tanstack/react-table"
+// Temporarily commenting out TanStack Table until we add the dependency
+// import { Table } from "@tanstack/react-table"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,13 +16,27 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-interface DataTablePaginationProps<TData> {
-  table: Table<TData>
+// Define a simple interface to avoid @tanstack/react-table dependency
+interface TableType {
+  getFilteredSelectedRowModel: () => { rows: { length: number }[] };
+  getFilteredRowModel: () => { rows: { length: number }[] };
+  getState: () => { pagination: { pageIndex: number, pageSize: number } };
+  getPageCount: () => number;
+  setPageIndex: (index: number) => void;
+  previousPage: () => void;
+  nextPage: () => void;
+  getCanPreviousPage: () => boolean;
+  getCanNextPage: () => boolean;
+  setPageSize: (size: number) => void;
 }
 
-export function DataTablePagination<TData>({
+interface DataTablePaginationProps {
+  table: TableType;
+}
+
+export function DataTablePagination({
   table,
-}: DataTablePaginationProps<TData>) {
+}: DataTablePaginationProps) {
   return (
     <div className="flex items-center justify-between px-2">
       <div className="flex-1 text-sm text-muted-foreground">

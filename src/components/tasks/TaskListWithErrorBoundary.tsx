@@ -1,7 +1,7 @@
 'use client';
 
 import { withErrorBoundary } from '@/components/ui/error-boundary';
-import TaskList from './TaskList';
+import { ListView } from './list-view';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCcw } from 'lucide-react';
 
@@ -33,10 +33,8 @@ const TaskListErrorFallback = ({ resetErrorBoundary }: { resetErrorBoundary: () 
 );
 
 // Apply the error boundary using the HOC pattern
-const TaskListWithErrorBoundary = withErrorBoundary(TaskList, {
-  fallback: ({ resetErrorBoundary }) => (
-    <TaskListErrorFallback resetErrorBoundary={resetErrorBoundary} />
-  ),
+const TaskListWithErrorBoundary = withErrorBoundary(ListView, {
+  fallback: <TaskListErrorFallback resetErrorBoundary={() => {}} />,
   onError: (error) => {
     console.error('Task list error:', error);
     // In production, send to error reporting service

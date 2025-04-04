@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProductivityScore } from '@/components/analytics/ProductivityScore';
 import { TaskCompletionChart } from '@/components/analytics/TaskCompletionChart';
 import { TimeAllocationChart } from '@/components/analytics/TimeAllocationChart';
+import { ProductivityInsights } from '@/components/analytics/ProductivityInsights';
 import { useTasksRealtime } from '@/hooks/api/useTasksRealtime';
 import { useProjectsRealtime } from '@/hooks/api/useProjectsRealtime';
 import { Check, Clock, Calendar } from 'lucide-react';
@@ -134,10 +135,16 @@ export default function AnalyticsPage() {
             days={period === 'week' ? 7 : 30} 
           />
         </div>
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-2">
           <TimeAllocationChart 
             tasks={tasks} 
             projects={projects} 
+            period={period} 
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <ProductivityInsights 
+            tasks={tasks} 
             period={period} 
           />
         </div>

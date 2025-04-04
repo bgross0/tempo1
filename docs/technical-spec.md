@@ -1,8 +1,8 @@
-# TaskJet Technical Specification
+# Tempo Technical Specification
 
 ## 1. Overview and Purpose
 
-TaskJet is a modern task management application designed to help users organize tasks, manage projects, schedule events, and track productivity metrics. Built with Next.js and Supabase, it offers real-time synchronization across devices, intelligent task scheduling, and comprehensive productivity analytics.
+Tempo is a modern task management application designed to help users organize tasks, manage projects, schedule events, and track productivity metrics. Built with Next.js and Supabase, it offers real-time synchronization across devices, intelligent task scheduling, and comprehensive productivity analytics.
 
 ## 2. Technology Stack
 
@@ -28,7 +28,7 @@ TaskJet is a modern task management application designed to help users organize 
 
 ## 3. System Architecture
 
-TaskJet follows a hybrid architecture combining server-side rendering, static generation, and client-side rendering:
+Tempo follows a hybrid architecture combining server-side rendering, static generation, and client-side rendering:
 
 1. **Server Components**: Used for data-fetching and initial rendering
 2. **Client Components**: Used for interactive elements and state management
@@ -129,7 +129,7 @@ src/
 ## 5. API Design
 
 ### REST API
-TaskJet uses Next.js API routes to handle specific operations:
+Tempo uses Next.js API routes to handle specific operations:
 
 - `/api/tasks`: CRUD operations for tasks
 - `/api/projects`: CRUD operations for projects
@@ -221,7 +221,7 @@ For many operations, components will interact with Supabase directly:
 
 ## 9. Routing
 
-TaskJet uses Next.js App Router with the following routes:
+Tempo uses Next.js App Router with the following routes:
 
 - `/`: Landing page
 - `/login`, `/signup`: Authentication

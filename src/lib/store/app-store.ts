@@ -78,7 +78,7 @@ type AppStore = UIState & DataState & UIActions & DataActions;
 export const useAppStore = create<AppStore>((set) => ({
   // UI state
   sidebarCollapsed: false,
-  viewMode: 'list',
+  viewMode: 'kanban',
   commandPaletteOpen: false,
   currentView: 'dashboard',
   calendarView: 'week',

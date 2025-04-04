@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format, addDays, startOfMonth, endOfMonth, getDay, isSameMonth, isToday, parseISO } from 'date-fns';
 import { useAppStore } from '@/lib/store';
-import TaskCard from '@/components/tasks/TaskCard';
+import TaskCard from '@/components/dashboard/TaskCard';
+import { Task as StoreTask, Event as StoreEvent } from '@/types';
+import { Task as DatabaseTask, Event as DatabaseEvent } from '@/types/database';
 import EventCard from '@/components/events/EventCard';
 
 interface MonthViewProps {
@@ -112,13 +114,37 @@ export default function MonthView({ date }: MonthViewProps) {
               
               {/* Tasks and events */}
               <div className="overflow-y-auto max-h-[80px]">
-                {dayTasks.map(task => (
-                  <TaskCard key={task.id} task={task} minimal />
-                ))}
+                {dayTasks.map(task => {
+                  // Convert from store task type to database task type
+                  const dbTask: DatabaseTask = {
+                    id: task.id,
+                    user_id: "",
+                    project_id: task.projectId,
+                    name: task.name,
+                    description: task.description || null,
+                    start_date: task.startDate,
+                    start_time: task.startTime,
+                    due_date: task.dueDate,
+                    due_time: task.dueTime,
+                    priority: task.priority,
+                    duration: task.duration,
+                    chunk_size: task.chunkSize,
+                    hard_deadline: task.hardDeadline,
+                    completed: task.completed,
+                    completed_at: null,
+                    tags: task.tags,
+                    created_at: task.createdAt,
+                    updated_at: task.createdAt,
+                    scheduled_blocks: task.scheduledBlocks as any,
+                    status: task.status
+                  };
+                  return <TaskCard key={task.id} task={dbTask} compact />;
+                })}
                 
-                {dayEvents.map(event => (
-                  <EventCard key={event.id} event={event} minimal />
-                ))}
+                {dayEvents.map(event => {
+                  // Events are already in the correct format after conversion in getItemsByDate
+                  return <EventCard key={event.id} event={event} minimal />;
+                })}
                 
                 {/* Indicator for more items than can be displayed */}
                 {(dayTasks.length + dayEvents.length > 3) && (

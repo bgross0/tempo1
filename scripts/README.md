@@ -1,6 +1,6 @@
-# TaskJet Scripts
+# Tempo Scripts
 
-This directory contains various utility scripts for development, deployment, and maintenance of the TaskJet application.
+This directory contains various utility scripts for development, deployment, and maintenance of the Tempo application.
 
 ## Directory Structure
 

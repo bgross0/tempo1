@@ -182,7 +182,7 @@ export default function EventCard({ event: dbEvent, minimal = false }: EventCard
       
       {/* Edit Dialog */}
       <EventDialog 
-        event={event} 
+        event={dbEvent} 
         open={editDialogOpen} 
         onOpenChange={setEditDialogOpen} 
       />

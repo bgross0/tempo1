@@ -103,8 +103,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   
   // Register keyboard shortcuts
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    const handleKeydownEvent = (e: globalThis.KeyboardEvent) => {
+      handleKeyDown(e as unknown as KeyboardEvent);
+    };
+    
+    window.addEventListener('keydown', handleKeydownEvent);
+    return () => window.removeEventListener('keydown', handleKeydownEvent);
   }, [handleKeyDown]);
 
   const handleSignOut = async () => {
@@ -160,11 +164,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <Image 
                 src="/images/logo.png" 
                 alt="Tempo Logo" 
-                width={32}
-                height={32}
+                width={96}
+                height={96}
                 className="h-8 w-auto" 
               />
-              {!sidebarCollapsed && <span className="font-semibold">TaskJet</span>}
             </Link>
             <div className="flex items-center">
               <Button 
@@ -198,7 +201,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             <div className="shrink-0">
               <Avatar className="h-10 w-10">
                 <AvatarFallback className="bg-blue-600 text-white">{userInitial}</AvatarFallback>
-                {user?.avatar_url && <AvatarImage src={user.avatar_url} alt={userName} />}
+                {/* User from context doesn't have avatar_url */}
+                <AvatarImage src={`https://avatar.vercel.sh/${user?.email || 'user'}`} alt={userName} />
               </Avatar>
             </div>
             {!sidebarCollapsed && (

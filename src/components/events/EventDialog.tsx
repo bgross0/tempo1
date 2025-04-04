@@ -12,13 +12,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { EventForm } from '@/components/forms/event-form';
 import { EventFormValues } from '@/lib/validations/event';
-import { Event } from '@/types/database';
+import { Event as DatabaseEvent } from '@/types/database';
+import { Event, RecurringType } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/lib/store';
 
 interface EventDialogProps {
-  event?: Event;
+  event?: DatabaseEvent;
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -62,17 +63,17 @@ export default function EventDialog({
         if (error) throw error;
         
         // Convert from database format (snake_case) to app format (camelCase)
-        const adaptedEvent = {
+        const adaptedEvent: Event = {
           id: updatedEvent.id,
           name: updatedEvent.name,
-          description: updatedEvent.description,
+          description: updatedEvent.description || undefined,
           startDate: updatedEvent.start_date,
           startTime: updatedEvent.start_time,
           endDate: updatedEvent.end_date,
           endTime: updatedEvent.end_time,
-          location: updatedEvent.location,
-          recurring: updatedEvent.recurring,
-          tags: updatedEvent.tags,
+          location: updatedEvent.location || undefined,
+          recurring: updatedEvent.recurring as RecurringType,
+          tags: updatedEvent.tags || [],
           createdAt: updatedEvent.created_at,
         };
         
@@ -107,17 +108,17 @@ export default function EventDialog({
         if (error) throw error;
         
         // Convert from database format (snake_case) to app format (camelCase)
-        const adaptedEvent = {
+        const adaptedEvent: Event = {
           id: newEvent.id,
           name: newEvent.name,
-          description: newEvent.description,
+          description: newEvent.description || undefined,
           startDate: newEvent.start_date,
           startTime: newEvent.start_time,
           endDate: newEvent.end_date,
           endTime: newEvent.end_time,
-          location: newEvent.location,
-          recurring: newEvent.recurring,
-          tags: newEvent.tags,
+          location: newEvent.location || undefined,
+          recurring: newEvent.recurring as RecurringType,
+          tags: newEvent.tags || [],
           createdAt: newEvent.created_at,
         };
         

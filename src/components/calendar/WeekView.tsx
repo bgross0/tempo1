@@ -2,7 +2,9 @@
 import { useState, useEffect } from 'react';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { useAppStore } from '@/lib/store';
-import TaskCard from '@/components/tasks/TaskCard';
+import TaskCard from '@/components/dashboard/TaskCard';
+import { Task as StoreTask, Event as StoreEvent } from '@/types';
+import { Task as DatabaseTask, Event as DatabaseEvent } from '@/types/database';
 import EventCard from '@/components/events/EventCard';
 
 interface WeekViewProps {
@@ -83,13 +85,52 @@ export default function WeekView({ date }: WeekViewProps) {
                   data-date={dateString}
                   data-hour={hour}
                 >
-                  {scheduledTasks.map(task => (
-                    <TaskCard key={task.id} task={task} />
-                  ))}
+                  {scheduledTasks.map(task => {
+                    // Convert from store task type to database task type
+                    const dbTask: DatabaseTask = {
+                      id: task.id,
+                      user_id: "",
+                      project_id: task.projectId,
+                      name: task.name,
+                      description: task.description || null,
+                      start_date: task.startDate,
+                      start_time: task.startTime,
+                      due_date: task.dueDate,
+                      due_time: task.dueTime,
+                      priority: task.priority,
+                      duration: task.duration,
+                      chunk_size: task.chunkSize,
+                      hard_deadline: task.hardDeadline,
+                      completed: task.completed,
+                      completed_at: null,
+                      tags: task.tags,
+                      created_at: task.createdAt,
+                      updated_at: task.createdAt,
+                      scheduled_blocks: task.scheduledBlocks as any,
+                      status: task.status
+                    };
+                    return <TaskCard key={task.id} task={dbTask} />;
+                  })}
                   
-                  {scheduledEvents.map(event => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
+                  {scheduledEvents.map(event => {
+                    // Convert from store event type to database event type
+                    const dbEvent: DatabaseEvent = {
+                      id: event.id,
+                      user_id: "",
+                      name: event.name,
+                      description: event.description || null,
+                      start_date: event.startDate,
+                      start_time: event.startTime,
+                      end_date: event.endDate,
+                      end_time: event.endTime,
+                      location: event.location || null,
+                      recurring: event.recurring,
+                      tags: event.tags,
+                      created_at: event.createdAt,
+                      updated_at: event.createdAt
+                    };
+                    return <EventCard key={event.id} event={dbEvent} />;
+                  })}
                 </div>
               );
             })}

@@ -1,6 +1,6 @@
-# TaskJet Configuration Backups
+# Tempo Configuration Backups
 
-This directory contains backup versions of configuration files for the TaskJet application.
+This directory contains backup versions of configuration files for the Tempo application.
 
 ## Contents
 

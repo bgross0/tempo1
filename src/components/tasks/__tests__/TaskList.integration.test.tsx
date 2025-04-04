@@ -9,7 +9,7 @@ describe('TaskList Integration', () => {
       id: '1',
       user_id: 'user-123',
       name: 'Complete project proposal',
-      description: 'Finish the TaskJet proposal',
+      description: 'Finish the Tempo proposal',
       priority: 'high',
       due_date: '2025-05-01',
       completed: false,

@@ -1,9 +1,10 @@
-// src/components/layout/AppLayout.tsx
+'use client';
+
 import { ReactNode, useEffect } from 'react';
-import { useRouter } from 'next/router';
+// Next.js App Router uses useRouter differently
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import Sidebar from './Sidebar';
-import Header from './Header';
+import { SidebarLeft } from '@/components/sidebar-left';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -14,8 +15,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
   
   useEffect(() => {
-    if (!loading && !user && !router.pathname.startsWith('/auth')) {
-      router.push('/auth/login');
+    if (!loading && !user) {
+      router.push('/login');
     }
   }, [user, loading, router]);
   
@@ -27,20 +28,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
     );
   }
   
-  if (!user && !router.pathname.startsWith('/auth')) {
+  if (!user) {
     return null;
   }
   
-  // For auth pages, don't show the app layout
-  if (router.pathname.startsWith('/auth')) {
-    return <>{children}</>;
-  }
-  
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+      <SidebarLeft />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Header />
+        <div className="border-b bg-background flex h-14 items-center px-4 justify-between">
+          <h1 className="text-lg font-semibold">TaskJet</h1>
+        </div>
         <main className="flex-1 overflow-y-auto p-4">
           {children}
         </main>
