@@ -1,6 +1,17 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+
+// Define a type for auth events including SIGNED_UP
+type AuthEvent = 
+  | 'INITIAL_SESSION'
+  | 'SIGNED_IN'
+  | 'SIGNED_OUT'
+  | 'TOKEN_REFRESHED'
+  | 'USER_UPDATED'
+  | 'MFA_CHALLENGE_VERIFIED'
+  | 'PASSWORD_RECOVERY'
+  | 'SIGNED_UP'; // Adding SIGNED_UP to support both event types
 import { 
   getPersistedAuthState, 
   persistAuthState, 
@@ -114,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      (event: AuthEvent, currentSession) => {
         console.log('Auth state changed:', event);
         
         if (mounted) {

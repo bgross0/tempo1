@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasksRealtime } from '@/hooks/api/useTasksRealtime';
 import { useProjectsRealtime } from '@/hooks/api/useProjectsRealtime';
+import type { Task, Project } from '@/types/database';
 
 // Import settings dialog
 import { SettingsDialog } from '@/components/settings-dialog';
@@ -33,19 +34,6 @@ import TaskTimeline from '@/components/dashboard/TaskTimeline';
 import CalendarWidget from '@/components/dashboard/CalendarWidget';
 import { SchedulerPanel } from '@/components/tasks/SchedulerPanel';
 import { ScheduleView } from '@/components/tasks/ScheduleView';
-import MiniCalendar from '@/components/calendar/MiniCalendar';
-
-// Import sidebar components
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarProvider
-} from '@/components/ui/sidebar';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -59,14 +47,14 @@ export default function DashboardPage() {
   const todayDateStr = today.toISOString().split('T')[0];
   
   // Filter tasks that are due today
-  const tasksToday = tasks.filter(task => {
+  const tasksToday = tasks.filter((task: Task) => {
     const taskDate = new Date(task.due_date);
     taskDate.setHours(0, 0, 0, 0);
     return taskDate.toISOString().split('T')[0] === todayDateStr && !task.completed;
   });
   
   // Find tasks that are overdue
-  const overdueTasks = tasks.filter(task => {
+  const overdueTasks = tasks.filter((task: Task) => {
     const taskDate = new Date(task.due_date);
     taskDate.setHours(0, 0, 0, 0);
     return taskDate < today && !task.completed;
@@ -85,289 +73,241 @@ export default function DashboardPage() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex w-full">
-        {/* Main Content Area */}
-        <div className="flex-1 pr-6">
-          {/* Show settings dialog when settings is clicked */}
-          {settingsOpen && <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />}
-          
-          {/* Header Section */}
-          <section className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold">
-                Good {getGreeting()}, {userName}!
-              </h1>
-              <p className="text-gray-500 mt-1">
-                Here's what's happening with your tasks and projects
-              </p>
+    <div className="w-full h-full">
+      {/* Show settings dialog when settings is clicked */}
+      {settingsOpen && <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />}
+      
+      {/* Header Section */}
+      <section className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Good {getGreeting()}, {userName}!
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Here's what's happening with your tasks and projects
+          </p>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/tasks?create=true">
+              <Plus className="h-4 w-4 mr-1" />
+              New Task
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/projects?create=true">
+              <Plus className="h-4 w-4 mr-1" />
+              New Project
+            </Link>
+          </Button>
+        </div>
+      </section>
+      
+      {/* Stats Cards */}
+      <DashboardStats tasks={tasks} projects={projects} />
+      
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="overview" className="space-y-4 mt-6">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="today">Today's Tasks</TabsTrigger>
+          <TabsTrigger value="overdue">Overdue</TabsTrigger>
+        </TabsList>
+        
+        {/* Overview Tab - Reorganized as rows instead of columns */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Task Timeline Section */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Task Timeline</h2>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/tasks" className="flex items-center text-sm text-zinc-600">
+                  View all
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </Link>
+              </Button>
             </div>
             
-            <div className="flex gap-2">
-              <Button asChild variant="outline" size="sm">
-                <Link href="/tasks?create=true">
-                  <Plus className="h-4 w-4 mr-1" />
-                  New Task
-                </Link>
-              </Button>
-              <Button asChild variant="tempo" size="sm">
-                <Link href="/projects?create=true">
-                  <Plus className="h-4 w-4 mr-1" />
-                  New Project
-                </Link>
-              </Button>
-            </div>
+            <TaskTimeline tasks={tasks} />
           </section>
           
-          {/* Stats Cards */}
-          <DashboardStats tasks={tasks} projects={projects} />
-          
-          {/* Main Content Tabs */}
-          <Tabs defaultValue="overview" className="space-y-4 mt-6">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="today">Today's Tasks</TabsTrigger>
-              <TabsTrigger value="overdue">Overdue</TabsTrigger>
-            </TabsList>
+          {/* Projects Section */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Active Projects</h2>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/projects" className="flex items-center text-sm text-zinc-600">
+                  View all
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </Link>
+              </Button>
+            </div>
             
-            {/* Overview Tab - Reorganized as rows instead of columns */}
-            <TabsContent value="overview" className="space-y-6">
-              {/* Task Timeline Section */}
-              <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Task Timeline</h2>
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href="/tasks" className="flex items-center text-sm text-blue-600">
-                      View all
-                      <ChevronRight className="ml-1 h-3 w-3" />
-                    </Link>
-                  </Button>
-                </div>
-                
-                <TaskTimeline tasks={tasks} />
-              </section>
-              
-              {/* Projects Section */}
-              <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Active Projects</h2>
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href="/projects" className="flex items-center text-sm text-blue-600">
-                      View all
-                      <ChevronRight className="ml-1 h-3 w-3" />
-                    </Link>
-                  </Button>
-                </div>
-                
-                <Card>
-                  <CardContent className="p-4 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {projects.filter(p => !p.completed).slice(0, 4).map(project => (
-                        <div key={project.id} className="border rounded-lg p-3 hover:border-blue-200 transition-colors">
-                          <div className="flex justify-between">
-                            <h3 className="font-medium text-sm">{project.name}</h3>
-                            <div className={`px-2 py-0.5 text-xs rounded-full ${getPriorityClass(project.priority)}`}>
-                              {project.priority}
-                            </div>
-                          </div>
-                          
-                          {project.description && (
-                            <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                              {project.description}
-                            </p>
-                          )}
-                          
-                          <div className="flex items-center justify-between mt-3">
-                            <div className="text-xs text-gray-500">
-                              Due: {new Date(project.due_date).toLocaleDateString()}
-                            </div>
-                            
-                            <Button asChild variant="ghost" size="sm" className="h-7 px-2">
-                              <Link href={`/projects/${project.id}`}>
-                                Details
-                                <ArrowRight className="ml-1 h-3 w-3" />
-                              </Link>
-                            </Button>
-                          </div>
+            <Card>
+              <CardContent className="p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {projects.filter(p => !p.completed).slice(0, 4).map(project => (
+                    <div key={project.id} className="border rounded-lg p-3 hover:border-zinc-200 transition-colors">
+                      <div className="flex justify-between">
+                        <h3 className="font-medium text-sm">{project.name}</h3>
+                        <div className={`px-2 py-0.5 text-xs rounded-full ${getPriorityClass(project.priority)}`}>
+                          {project.priority}
                         </div>
-                      ))}
-                    </div>
-                    
-                    {projects.filter(p => !p.completed).length === 0 && (
-                      <div className="text-center py-6">
-                        <p className="text-gray-500">No active projects</p>
-                        <Button asChild variant="tempo" className="mt-2">
-                          <Link href="/projects?create=true">
-                            <Plus className="mr-1 h-4 w-4" />
-                            Create Project
+                      </div>
+                      
+                      {project.description && (
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                          {project.description}
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="text-xs text-gray-500">
+                          Due: {new Date(project.due_date).toLocaleDateString()}
+                        </div>
+                        
+                        <Button asChild variant="ghost" size="sm" className="h-7 px-2">
+                          <Link href={`/projects/${project.id}`}>
+                            Details
+                            <ArrowRight className="ml-1 h-3 w-3" />
                           </Link>
                         </Button>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </section>
+                    </div>
+                  ))}
+                </div>
+                
+                {projects.filter(p => !p.completed).length === 0 && (
+                  <div className="text-center py-6">
+                    <p className="text-gray-500">No active projects</p>
+                    <Button asChild variant="outline" className="mt-2">
+                      <Link href="/projects?create=true">
+                        <Plus className="mr-1 h-4 w-4" />
+                        Create Project
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
 
-              {/* Calendar and Schedule Section */}
-              <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Calendar</h2>
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href="/calendar" className="flex items-center text-sm text-blue-600">
-                      Full view
-                      <ChevronRight className="ml-1 h-3 w-3" />
+          {/* Calendar and Schedule Section */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Calendar</h2>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/calendar" className="flex items-center text-sm text-zinc-600">
+                  Full view
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <CalendarWidget tasks={tasks} />
+              <div className="space-y-4">
+                <SchedulerPanel tasks={tasks} onViewSchedule={handleViewSchedule} />
+                <div id="schedule-view-section">
+                  <ScheduleView tasks={tasks} />
+                </div>
+              </div>
+            </div>
+          </section>
+          
+          {/* Quick Access */}
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">Quick Access</h2>
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
+              <QuickAccessCard 
+                title="Calendar" 
+                description="View your schedule"
+                icon={<CalendarIcon className="h-5 w-5" />}
+                href="/calendar"
+              />
+              <QuickAccessCard 
+                title="Analytics" 
+                description="Track productivity"
+                icon={<BarChart3 className="h-5 w-5" />}
+                href="/analytics"
+              />
+              <QuickAccessCard 
+                title="Add Task" 
+                description="Create a new task"
+                icon={<Plus className="h-5 w-5" />}
+                href="/tasks?create=true"
+              />
+              <QuickAccessCard 
+                title="Add Project" 
+                description="Start a new project"
+                icon={<Plus className="h-5 w-5" />}
+                href="/projects?create=true"
+              />
+            </div>
+          </section>
+        </TabsContent>
+        
+        {/* Today's Tasks Tab */}
+        <TabsContent value="today">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Today's Tasks</CardTitle>
+              <CardDescription>Tasks due today: {tasksToday.length}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {tasksToday.length > 0 ? (
+                tasksToday.map(task => (
+                  <TaskCard key={task.id} task={task} compact />
+                ))
+              ) : (
+                <div className="text-center py-6">
+                  <Check className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium">All Clear!</h3>
+                  <p className="text-gray-500 mt-1">
+                    You have no tasks due today
+                  </p>
+                  <Button className="mt-4" variant="outline" asChild>
+                    <Link href="/tasks?create=true">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Task
                     </Link>
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <CalendarWidget tasks={tasks} />
-                  <div className="space-y-4">
-                    <SchedulerPanel tasks={tasks} onViewSchedule={handleViewSchedule} />
-                    <div id="schedule-view-section">
-                      <ScheduleView tasks={tasks} />
-                    </div>
-                  </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Overdue Tasks Tab */}
+        <TabsContent value="overdue">
+          <Card className={overdueTasks.length > 0 ? "border-red-200" : ""}>
+            <CardHeader>
+              <CardTitle className="text-lg">Overdue Tasks</CardTitle>
+              <CardDescription className={overdueTasks.length > 0 ? "text-red-500" : ""}>
+                {overdueTasks.length > 0 
+                  ? `${overdueTasks.length} task${overdueTasks.length > 1 ? 's' : ''} past due date` 
+                  : "No overdue tasks"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {overdueTasks.length > 0 ? (
+                overdueTasks.map(task => (
+                  <TaskCard key={task.id} task={task} compact />
+                ))
+              ) : (
+                <div className="text-center py-6">
+                  <Check className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium">Great Job!</h3>
+                  <p className="text-gray-500 mt-1">
+                    You're all caught up with your tasks
+                  </p>
                 </div>
-              </section>
-              
-              {/* Quick Access */}
-              <section className="space-y-4">
-                <h2 className="text-lg font-semibold">Quick Access</h2>
-                <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
-                  <QuickAccessCard 
-                    title="Calendar" 
-                    description="View your schedule"
-                    icon={<CalendarIcon className="h-5 w-5" />}
-                    href="/calendar"
-                  />
-                  <QuickAccessCard 
-                    title="Analytics" 
-                    description="Track productivity"
-                    icon={<BarChart3 className="h-5 w-5" />}
-                    href="/analytics"
-                  />
-                  <QuickAccessCard 
-                    title="Add Task" 
-                    description="Create a new task"
-                    icon={<Plus className="h-5 w-5" />}
-                    href="/tasks?create=true"
-                  />
-                  <QuickAccessCard 
-                    title="Add Project" 
-                    description="Start a new project"
-                    icon={<Plus className="h-5 w-5" />}
-                    href="/projects?create=true"
-                  />
-                </div>
-              </section>
-            </TabsContent>
-            
-            {/* Today's Tasks Tab */}
-            <TabsContent value="today">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Today's Tasks</CardTitle>
-                  <CardDescription>Tasks due today: {tasksToday.length}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {tasksToday.length > 0 ? (
-                    tasksToday.map(task => (
-                      <TaskCard key={task.id} task={task} compact />
-                    ))
-                  ) : (
-                    <div className="text-center py-6">
-                      <Check className="h-12 w-12 text-green-500 mx-auto mb-3" />
-                      <h3 className="text-lg font-medium">All Clear!</h3>
-                      <p className="text-gray-500 mt-1">
-                        You have no tasks due today
-                      </p>
-                      <Button className="mt-4" variant="tempo" asChild>
-                        <Link href="/tasks?create=true">
-                          <Plus className="mr-2 h-4 w-4" />
-                          Create Task
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            {/* Overdue Tasks Tab */}
-            <TabsContent value="overdue">
-              <Card className={overdueTasks.length > 0 ? "border-red-200" : ""}>
-                <CardHeader>
-                  <CardTitle className="text-lg">Overdue Tasks</CardTitle>
-                  <CardDescription className={overdueTasks.length > 0 ? "text-red-500" : ""}>
-                    {overdueTasks.length > 0 
-                      ? `${overdueTasks.length} task${overdueTasks.length > 1 ? 's' : ''} past due date` 
-                      : "No overdue tasks"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {overdueTasks.length > 0 ? (
-                    overdueTasks.map(task => (
-                      <TaskCard key={task.id} task={task} compact />
-                    ))
-                  ) : (
-                    <div className="text-center py-6">
-                      <Check className="h-12 w-12 text-green-500 mx-auto mb-3" />
-                      <h3 className="text-lg font-medium">Great Job!</h3>
-                      <p className="text-gray-500 mt-1">
-                        You're all caught up with your tasks
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Right Sidebar with MiniCalendar */}
-        <Sidebar side="right" variant="sidebar" className="hidden md:block w-64 flex-shrink-0 border-l">
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Calendar</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <MiniCalendar />
-              </SidebarGroupContent>
-            </SidebarGroup>
-            
-            <SidebarGroup>
-              <SidebarGroupLabel>Upcoming</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <div className="space-y-2">
-                  {tasksToday.slice(0, 3).map(task => (
-                    <div key={task.id} className="p-2 bg-gray-50 dark:bg-gray-800 rounded-md text-xs">
-                      <div className="font-medium truncate">{task.title}</div>
-                      <div className="text-gray-500 flex items-center mt-1">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {new Date(task.due_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                      </div>
-                    </div>
-                  ))}
-                  {tasksToday.length === 0 && (
-                    <div className="text-xs text-gray-500 text-center p-2">
-                      No tasks for today
-                    </div>
-                  )}
-                </div>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            
-            <SidebarFooter>
-              <Button asChild variant="outline" size="sm" className="w-full">
-                <Link href="/calendar">
-                  <CalendarIcon className="w-4 h-4 mr-1" />
-                  Open Calendar
-                </Link>
-              </Button>
-            </SidebarFooter>
-          </SidebarContent>
-        </Sidebar>
-      </div>
-    </SidebarProvider>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
 
@@ -384,11 +324,11 @@ function QuickAccessCard({
   href: string; 
 }) {
   return (
-    <Card className="overflow-hidden hover:border-blue-200 transition-colors">
+    <Card className="overflow-hidden hover:border-zinc-200 transition-colors">
       <Link href={href} className="block h-full">
         <CardContent className="p-4">
           <div className="flex flex-col items-center text-center">
-            <div className="p-2 rounded-full bg-blue-50 text-blue-600 mb-3">
+            <div className="p-2 rounded-full bg-zinc-50 text-zinc-600 mb-3">
               {icon}
             </div>
             <h3 className="font-medium text-sm">{title}</h3>

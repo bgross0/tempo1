@@ -136,19 +136,19 @@ export default function CalendarPage() {
   }, [events, setEvents]); // Include setEvents to avoid lint warnings
 
   return (
-    <div className="flex h-full gap-4">
-      {/* Sidebar */}
-      <div className="w-64 space-y-4">
-        <Button className="w-full" onClick={() => console.log('Create event')}>
-          <Plus className="h-4 w-4 mr-1" />
-          Add Event
-        </Button>
-        
-        <MiniCalendar />
+    <div className="w-full h-full">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl font-bold">Calendar</h1>
+        <div className="flex gap-2">
+          <Button onClick={() => console.log('Create event')}>
+            <Plus className="h-4 w-4 mr-1" />
+            Add Event
+          </Button>
+        </div>
       </div>
       
       {/* Main calendar */}
-      <div className="flex-1">
+      <div className="w-full">
         <CalendarView />
       </div>
     </div>

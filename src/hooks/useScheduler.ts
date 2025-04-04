@@ -8,19 +8,24 @@ import { ScheduledBlock as DatabaseScheduledBlock } from '@/types/database';
 
 export function useScheduler() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const { tasks, events, userSettings } = useAppStore();
+  const { tasks, events, settings } = useAppStore();
   const { updateTask } = useTasks();
   
-  // Default working hours if not set in user settings
-  const workingHoursStart = userSettings?.workingHoursStart || 9;
-  const workingHoursEnd = userSettings?.workingHoursEnd || 17;
+  // Parse hours from time strings like "09:00"
+  const parseHour = (timeStr: string): number => {
+    return parseInt(timeStr.split(':')[0], 10);
+  };
+  
+  // Default working hours from settings
+  const workingHoursStart = settings ? parseHour(settings.workingHoursStart) : 9;
+  const workingHoursEnd = settings ? parseHour(settings.workingHoursEnd) : 17;
   
   // Convert events to the format expected by the scheduler
   const formatEventsForScheduler = useCallback(() => {
     return events.map(event => ({
-      date: event.startDate,
-      startTime: event.startTime,
-      endTime: event.endTime
+      date: event.startDate || event.start_date,
+      startTime: event.startTime || event.start_time,
+      endTime: event.endTime || event.end_time
     }));
   }, [events]);
   

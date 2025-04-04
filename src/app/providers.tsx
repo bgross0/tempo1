@@ -13,11 +13,6 @@ export function Providers({ children }: { children: ReactNode }) {
     setMounted(true);
   }, []);
 
-  // Set mounted state
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Always render children to avoid hydration issues
   return (
     <AuthProvider>

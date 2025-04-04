@@ -233,7 +233,7 @@ export default function LoginPage() {
           alt="Tempo Logo" 
           width={32}
           height={32}
-          className="h-8 w-auto" 
+          className="h-16 w-auto" 
         />
       </Link>
       

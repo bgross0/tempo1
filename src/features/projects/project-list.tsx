@@ -8,8 +8,8 @@ import { ProjectCard } from './project-card';
 import { ProjectForm } from '@/components/forms/project-form';
 import { ProjectFilters } from './project-filters';
 
-import { useProjectsRealtime } from '@/hooks/api/useProjectsRealtime';
-import { useTasksRealtime } from '@/hooks/api/useTasksRealtime';
+import { useProjects } from '@/hooks/api/useProjects';
+import { useTasks } from '@/hooks/api/useTasks';
 import { Project } from '@/types/database';
 import { ProjectFormValues } from '@/lib/validations/project';
 
@@ -33,7 +33,7 @@ export function ProjectList() {
     mutate,
   } = useProjects({
     completed: filters.completed,
-    priority: filters.priority as any,
+    priority: filters.priority as 'high' | 'medium' | 'low' | undefined,
     tags: filters.tags.length > 0 ? filters.tags : undefined,
   });
 
@@ -56,6 +56,7 @@ export function ProjectList() {
       ...data,
       user_id: 'temp-user-id', // Replace with real user ID in production
       completed: false,
+      completed_at: null, // Add the missing completed_at property
     });
     setIsCreating(false);
   };
@@ -63,7 +64,13 @@ export function ProjectList() {
   const handleUpdate = async (data: ProjectFormValues) => {
     if (!selectedProject) return;
     
-    await updateProject(selectedProject.id, data);
+    // Preserve fields that aren't part of the form values
+    await updateProject(selectedProject.id, {
+      ...data,
+      user_id: selectedProject.user_id, // Preserve the user_id
+      completed: selectedProject.completed, // Preserve completed status
+      completed_at: selectedProject.completed_at // Preserve completed_at
+    });
     setSelectedProject(null);
   };
 
@@ -73,10 +80,17 @@ export function ProjectList() {
   };
 
   const handleToggleComplete = async (projectId: string, completed: boolean) => {
-    await updateProject(projectId, { completed });
+    await updateProject(projectId, { 
+      completed,
+      completed_at: completed ? new Date().toISOString() : null 
+    });
   };
 
-  const handleFilterChange = (newFilters: any) => {
+  const handleFilterChange = (newFilters: {
+    completed: boolean;
+    priority: 'high' | 'medium' | 'low' | undefined;
+    tags: string[];
+  }) => {
     setFilters(newFilters);
   };
 

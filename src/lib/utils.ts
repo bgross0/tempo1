@@ -41,3 +41,50 @@ export function calculateCompletionPercentage(completed: number, total: number):
   if (total === 0) return 0;
   return Math.round((completed / total) * 100);
 }
+
+/**
+ * Utility function to normalize task objects from different sources
+ * Handles both camelCase and snake_case property names
+ */
+export function normalizeTask(task: any) {
+  // Create a new object with standardized properties
+  return {
+    id: task.id,
+    name: task.name,
+    description: task.description || null,
+    startDate: task.startDate || task.start_date || null,
+    startTime: task.startTime || task.start_time || null,
+    dueDate: task.dueDate || task.due_date || null,
+    dueTime: task.dueTime || task.due_time || null,
+    priority: task.priority,
+    projectId: task.projectId || task.project_id || null,
+    duration: task.duration || null,
+    chunkSize: task.chunkSize || task.chunk_size || null,
+    hardDeadline: task.hardDeadline || task.hard_deadline || false,
+    completed: task.completed || false,
+    status: task.status || 'todo',
+    tags: task.tags || [],
+    createdAt: task.createdAt || task.created_at,
+    scheduledBlocks: task.scheduledBlocks || task.scheduled_blocks || []
+  };
+}
+
+/**
+ * Utility function to normalize event objects from different sources
+ * Handles both camelCase and snake_case property names
+ */
+export function normalizeEvent(event: any) {
+  return {
+    id: event.id,
+    name: event.name,
+    description: event.description || null,
+    startDate: event.startDate || event.start_date || null,
+    startTime: event.startTime || event.start_time || null,
+    endDate: event.endDate || event.end_date || null,
+    endTime: event.endTime || event.end_time || null,
+    location: event.location || null,
+    recurring: event.recurring || 'none',
+    tags: event.tags || [],
+    createdAt: event.createdAt || event.created_at
+  };
+}

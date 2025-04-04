@@ -20,7 +20,7 @@ export function SchedulerPanel({ tasks, onViewSchedule }: SchedulerPanelProps) {
   const [period, setPeriod] = useState<'today' | 'week'>('today');
   const { isGenerating, generateScheduleForToday, generateScheduleForWeek } = useScheduler();
   const { toast } = useToast();
-  const userSettings = useAppStore(state => state.userSettings);
+  const settings = useAppStore(state => state.settings);
   
   // Get counts of schedulable tasks (not completed, with duration)
   const schedulableTasks = tasks.filter(task => !task.completed && task.duration);
@@ -73,8 +73,13 @@ export function SchedulerPanel({ tasks, onViewSchedule }: SchedulerPanelProps) {
   
   // Format working hours
   const formatWorkingHours = () => {
-    const start = userSettings?.workingHoursStart || 9;
-    const end = userSettings?.workingHoursEnd || 17;
+    // Parse hours from time strings like "09:00"
+    const parseHour = (timeStr: string): number => {
+      return parseInt(timeStr.split(':')[0], 10);
+    };
+    
+    const start = settings ? parseHour(settings.workingHoursStart) : 9;
+    const end = settings ? parseHour(settings.workingHoursEnd) : 17;
     
     // Convert to 12-hour format with AM/PM
     const formatHour = (hour: number) => {

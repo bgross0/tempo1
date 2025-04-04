@@ -8,33 +8,33 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       {/* Navigation */}
       <header className="sticky top-0 z-40 w-full border-b bg-white">
-        <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+        <div className="container flex h-20 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center">
               <Image 
                 src="/images/logo.png" 
                 alt="Tempo Logo" 
-                width={32}
-                height={32}
-                className="h-8 w-auto" 
+                width={200}
+                height={200}
+                className="h-16 w-auto" 
               />
             </Link>
           </div>
           <nav className="hidden md:flex gap-6">
-            <Link href="#features" className="text-sm font-medium text-gray-600 hover:text-blue-600">
+            <Link href="#features" className="text-sm font-medium text-gray-600 hover:text-zinc-900">
               Features
             </Link>
-            <Link href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-blue-600">
+            <Link href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-zinc-900">
               How It Works
             </Link>
-            <Link href="#pricing" className="text-sm font-medium text-gray-600 hover:text-blue-600">
+            <Link href="#pricing" className="text-sm font-medium text-gray-600 hover:text-zinc-900">
               Pricing
             </Link>
           </nav>
           <div className="flex items-center gap-4">
             <Link 
               href="/login"
-              className="text-sm font-medium text-gray-600 hover:text-blue-600"
+              className="text-sm font-medium text-gray-600 hover:text-zinc-900"
             >
               Log in
             </Link>
@@ -48,7 +48,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-blue-50 to-blue-100">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-zinc-50 to-zinc-100">
         <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
           <div className="space-y-6">
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
@@ -83,7 +83,7 @@ export default function HomePage() {
       <section id="features" className="w-full py-12 md:py-24 lg:py-32">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="inline-block rounded-lg bg-blue-100 px-3 py-1 text-sm text-blue-700">
+            <div className="inline-block rounded-lg bg-zinc-100 px-3 py-1 text-sm text-zinc-700">
               Features
             </div>
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
@@ -95,8 +95,8 @@ export default function HomePage() {
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-12">
             <div className="flex flex-col items-center space-y-4 rounded-lg border p-6">
-              <div className="rounded-full bg-blue-100 p-3">
-                <CheckCircle className="h-6 w-6 text-blue-700" />
+              <div className="rounded-full bg-zinc-100 p-3">
+                <CheckCircle className="h-6 w-6 text-zinc-700" />
               </div>
               <h3 className="text-xl font-bold">Smart Task Management</h3>
               <p className="text-center text-gray-600">
@@ -104,8 +104,8 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex flex-col items-center space-y-4 rounded-lg border p-6">
-              <div className="rounded-full bg-blue-100 p-3">
-                <Target className="h-6 w-6 text-blue-700" />
+              <div className="rounded-full bg-zinc-100 p-3">
+                <Target className="h-6 w-6 text-zinc-700" />
               </div>
               <h3 className="text-xl font-bold">Project Dashboard</h3>
               <p className="text-center text-gray-600">
@@ -113,8 +113,8 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex flex-col items-center space-y-4 rounded-lg border p-6">
-              <div className="rounded-full bg-blue-100 p-3">
-                <Calendar className="h-6 w-6 text-blue-700" />
+              <div className="rounded-full bg-zinc-100 p-3">
+                <Calendar className="h-6 w-6 text-zinc-700" />
               </div>
               <h3 className="text-xl font-bold">Flexible Calendar</h3>
               <p className="text-center text-gray-600">
@@ -122,8 +122,8 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex flex-col items-center space-y-4 rounded-lg border p-6">
-              <div className="rounded-full bg-blue-100 p-3">
-                <Zap className="h-6 w-6 text-blue-700" />
+              <div className="rounded-full bg-zinc-100 p-3">
+                <Zap className="h-6 w-6 text-zinc-700" />
               </div>
               <h3 className="text-xl font-bold">Smart Scheduling</h3>
               <p className="text-center text-gray-600">
@@ -131,8 +131,8 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex flex-col items-center space-y-4 rounded-lg border p-6">
-              <div className="rounded-full bg-blue-100 p-3">
-                <Clock className="h-6 w-6 text-blue-700" />
+              <div className="rounded-full bg-zinc-100 p-3">
+                <Clock className="h-6 w-6 text-zinc-700" />
               </div>
               <h3 className="text-xl font-bold">Time Tracking</h3>
               <p className="text-center text-gray-600">
@@ -140,8 +140,8 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex flex-col items-center space-y-4 rounded-lg border p-6">
-              <div className="rounded-full bg-blue-100 p-3">
-                <BarChart3 className="h-6 w-6 text-blue-700" />
+              <div className="rounded-full bg-zinc-100 p-3">
+                <BarChart3 className="h-6 w-6 text-zinc-700" />
               </div>
               <h3 className="text-xl font-bold">Advanced Analytics</h3>
               <p className="text-center text-gray-600">
@@ -153,7 +153,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-blue-600 text-white">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-zinc-800 text-white">
         <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
           <div className="space-y-6">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
@@ -178,13 +178,13 @@ export default function HomePage() {
             © {new Date().getFullYear()} Tempo. All rights reserved.
           </div>
           <div className="flex gap-4">
-            <Link href="#" className="text-sm text-gray-500 hover:text-blue-600">
+            <Link href="#" className="text-sm text-gray-500 hover:text-zinc-800">
               Terms
             </Link>
-            <Link href="#" className="text-sm text-gray-500 hover:text-blue-600">
+            <Link href="#" className="text-sm text-gray-500 hover:text-zinc-800">
               Privacy
             </Link>
-            <Link href="#" className="text-sm text-gray-500 hover:text-blue-600">
+            <Link href="#" className="text-sm text-gray-500 hover:text-zinc-800">
               Contact
             </Link>
           </div>

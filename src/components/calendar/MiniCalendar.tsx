@@ -3,6 +3,7 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, isSameMonth, is
 import { getDay, addDays } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { normalizeTask, normalizeEvent } from '@/lib/utils';
 
 export default function MiniCalendar() {
   const { 
@@ -54,22 +55,25 @@ export default function MiniCalendar() {
   const hasItems = (day: Date) => {
     const dateString = format(day, 'yyyy-MM-dd');
     
-    // Check tasks - using the correct property names (due_date instead of dueDate)
-    const hasTasks = tasks && tasks.some(task => {
-      if (!task) return false;
+    // Check tasks - using our normalizeTask utility
+    const hasTasks = tasks && (tasks as any[]).some(taskItem => {
+      if (!taskItem) return false;
+      
+      // Normalize the task to handle both camelCase and snake_case
+      const task = normalizeTask(taskItem);
       
       // Check if task has a due date that matches this day
-      if (task.due_date) {
-        const dueDate = typeof task.due_date === 'string'
-          ? task.due_date.split('T')[0] // If it's a string with time component
-          : format(new Date(task.due_date), 'yyyy-MM-dd'); // If it's a Date object
+      if (task.dueDate) {
+        const dueDate = typeof task.dueDate === 'string'
+          ? task.dueDate.split('T')[0] // If it's a string with time component
+          : format(new Date(task.dueDate), 'yyyy-MM-dd'); // If it's a Date object
         
         if (dueDate === dateString) return true;
       }
       
       // Check scheduled blocks if they exist
-      if (task.scheduled_blocks && Array.isArray(task.scheduled_blocks)) {
-        return task.scheduled_blocks.some(block => 
+      if (task.scheduledBlocks && Array.isArray(task.scheduledBlocks)) {
+        return task.scheduledBlocks.some((block: any) => 
           block && block.date === dateString
         );
       }
@@ -77,24 +81,24 @@ export default function MiniCalendar() {
       return false;
     });
     
-    // Check events
-    const hasEvents = events && events.some(event => {
-      if (!event) return false;
+    // Check events - using our normalizeEvent utility
+    const hasEvents = events && (events as any[]).some(eventItem => {
+      if (!eventItem) return false;
       
-      const startDate = event.startDate || event.start_date;
-      const endDate = event.endDate || event.end_date;
+      // Normalize the event to handle both camelCase and snake_case
+      const event = normalizeEvent(eventItem);
       
-      if (!startDate) return false;
+      if (!event.startDate) return false;
       
       // Format dates for comparison
-      const formattedStartDate = typeof startDate === 'string'
-        ? startDate.split('T')[0]
-        : format(new Date(startDate), 'yyyy-MM-dd');
+      const formattedStartDate = typeof event.startDate === 'string'
+        ? event.startDate.split('T')[0]
+        : format(new Date(event.startDate), 'yyyy-MM-dd');
         
-      const formattedEndDate = endDate
-        ? (typeof endDate === 'string'
-            ? endDate.split('T')[0]
-            : format(new Date(endDate), 'yyyy-MM-dd'))
+      const formattedEndDate = event.endDate
+        ? (typeof event.endDate === 'string'
+            ? event.endDate.split('T')[0]
+            : format(new Date(event.endDate), 'yyyy-MM-dd'))
         : formattedStartDate;
       
       return (formattedStartDate <= dateString && formattedEndDate >= dateString);
@@ -112,13 +116,13 @@ export default function MiniCalendar() {
         <div className="flex space-x-1">
           <button
             onClick={prevMonth}
-            className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="p-1 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={nextMonth}
-            className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="p-1 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -149,15 +153,15 @@ export default function MiniCalendar() {
               className={`
                 w-7 h-7 text-xs rounded-full flex items-center justify-center relative
                 ${!isCurrentMonth ? 'text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-gray-300'}
-                ${isCurrentDay ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : ''}
-                ${isSelectedDay ? 'bg-blue-500 text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}
+                ${isCurrentDay ? 'bg-zinc-100 dark:bg-zinc-900/50 text-zinc-800 dark:text-zinc-400' : ''}
+                ${isSelectedDay ? 'bg-zinc-800 text-white' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}
                 ${dayHasItems && !isSelectedDay && !isCurrentDay ? 'font-bold' : ''}
               `}
               onClick={() => onDateClick(day)}
             >
               {format(day, 'd')}
               {dayHasItems && !isSelectedDay && (
-                <span className="absolute bottom-0 w-1 h-1 rounded-full bg-blue-500"></span>
+                <span className="absolute bottom-0 w-1 h-1 rounded-full bg-zinc-500"></span>
               )}
             </button>
           );
@@ -167,7 +171,7 @@ export default function MiniCalendar() {
       <div className="mt-3 pt-3 border-t dark:border-gray-700">
         <button
           onClick={() => setSelectedDate(new Date())}
-          className="w-full py-1 text-xs text-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
+          className="w-full py-1 text-xs text-center text-zinc-700 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 rounded"
         >
           Today
         </button>

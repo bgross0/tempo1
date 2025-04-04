@@ -147,7 +147,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container mx-auto space-y-6">
+    <div className="w-full h-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-gray-500">Manage your account settings and preferences</p>
