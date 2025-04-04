@@ -25,6 +25,9 @@ export interface ScheduledBlock {
   endTime: string;
 }
 
+// Task Status Type
+export type TaskStatus = 'todo' | 'in-progress' | 'completed';
+
 // Task Interface
 export interface Task {
   id: string;
@@ -41,6 +44,7 @@ export interface Task {
   hardDeadline: boolean;
   tags: string[];
   completed: boolean;
+  status: TaskStatus;
   createdAt: string;
   scheduledBlocks: ScheduledBlock[];
 }

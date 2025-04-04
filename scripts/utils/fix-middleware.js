@@ -1,0 +1,128 @@
+#!/usr/bin/env node
+
+/**
+ * Middleware Diagnostic and Fix Tool
+ * 
+ * This script examines and fixes middleware issues that may cause redirect loops.
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+// Path to middleware file
+const middlewarePath = path.join(__dirname, 'src', 'middleware.ts');
+
+// Check if middleware exists
+if (!fs.existsSync(middlewarePath)) {
+  console.error('❌ Middleware file not found!');
+  process.exit(1);
+}
+
+// Read current middleware content
+const currentMiddleware = fs.readFileSync(middlewarePath, 'utf8');
+
+// Define a more conservative middleware implementation
+const newMiddleware = `import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+
+// Simple middleware that only handles cookies
+export async function middleware(req: NextRequest) {
+  console.log('SIMPLIFIED MIDDLEWARE RUNNING:', req.nextUrl.pathname);
+  
+  // Create a response with updated cookies if needed
+  let res = NextResponse.next();
+  
+  try {
+    // Skip middleware for static assets and API routes
+    if (
+      req.nextUrl.pathname.startsWith('/_next') ||
+      req.nextUrl.pathname.startsWith('/static') ||
+      req.nextUrl.pathname.startsWith('/api') ||
+      req.nextUrl.pathname === '/favicon.ico'
+    ) {
+      console.log('Path excluded from middleware checks');
+      return res;
+    }
+    
+    // Create a Supabase client just for cookie management
+    // This won't do any redirects, just handle cookies
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            const cookie = req.cookies.get(name);
+            return cookie?.value;
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            req.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+            
+            // Update the response cookies
+            res = NextResponse.next({
+              request: {
+                headers: req.headers,
+              },
+            });
+            
+            res.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+          },
+          remove(name: string, options: CookieOptions) {
+            req.cookies.delete({
+              name,
+              ...options,
+            });
+            
+            // Update the response cookies
+            res = NextResponse.next({
+              request: {
+                headers: req.headers,
+              },
+            });
+            
+            res.cookies.delete({
+              name,
+              ...options,
+            });
+          },
+        },
+      }
+    );
+    
+    // We're not checking auth status or redirecting in middleware anymore
+    // Just returning the response with cookies handled properly
+    return res;
+  } catch (error) {
+    console.error('Middleware error:', error);
+    return res;
+  }
+}
+
+// Very limited matcher to minimize issues
+export const config = {
+  matcher: [
+    // Match all requests
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
+};`;
+
+// Create a backup of the original middleware
+const backupPath = middlewarePath + '.backup';
+fs.writeFileSync(backupPath, currentMiddleware);
+console.log(`✅ Created backup of original middleware at ${backupPath}`);
+
+// Write the new simplified middleware
+fs.writeFileSync(middlewarePath, newMiddleware);
+console.log('✅ Installed new simplified middleware');
+
+console.log('\n🔄 Please restart your Next.js server for changes to take effect');
+console.log('💡 If you still experience issues, you can restore from the backup file');

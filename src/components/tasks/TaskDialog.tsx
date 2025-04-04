@@ -1,16 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, PaperclipIcon, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle,
+  DialogDescription,
   DialogTrigger
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
 import { TaskForm } from '@/components/forms/task-form';
 import { useTasks } from '@/hooks/api/useTasks';
 import { TaskFormValues } from '@/lib/validations/task';
@@ -32,6 +36,7 @@ export default function TaskDialog({
   onOpenChange: setControlledOpen 
 }: TaskDialogProps) {
   const [open, setOpen] = useState(false);
+  const [commentText, setCommentText] = useState('');
   const { createTask, updateTask } = useTasks();
   const { user } = useAuth();
   
@@ -160,9 +165,12 @@ export default function TaskDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="max-w-md md:max-w-xl">
+      <DialogContent className="max-w-md md:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{task ? 'Edit Task' : 'Create Task'}</DialogTitle>
+          <DialogDescription>
+            {task ? 'Update your task details below' : 'Enter details for your new task'}
+          </DialogDescription>
           <Button
             onClick={() => setIsOpen(false)}
             variant="ghost"
@@ -172,11 +180,71 @@ export default function TaskDialog({
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
-        <TaskForm
-          initialData={task}
-          onSubmit={handleSubmit}
-          onCancel={() => setIsOpen(false)}
-        />
+        
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="mb-4 w-full justify-start">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="comments">Comments</TabsTrigger>
+            <TabsTrigger value="attachments">Attachments</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="details">
+            <TaskForm
+              initialData={task}
+              onSubmit={handleSubmit}
+              onCancel={() => setIsOpen(false)}
+            />
+          </TabsContent>
+          
+          <TabsContent value="comments">
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Comments</h3>
+              <div className="space-y-4">
+                {/* Comment list - would come from API in real implementation */}
+                <div className="text-center text-gray-500 dark:text-gray-400 text-sm py-4">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  No comments yet
+                </div>
+                
+                {/* Comment input */}
+                <div className="flex items-start gap-2 mt-4">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <Textarea 
+                      placeholder="Add a comment..." 
+                      className="resize-none"
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                    />
+                    <Button 
+                      size="sm" 
+                      className="mt-2"
+                      disabled={!commentText.trim()}
+                    >
+                      Add Comment
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="attachments">
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Attachments</h3>
+              <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                <PaperclipIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                <p className="text-gray-500 dark:text-gray-400 mb-2">Drag files here or click to upload</p>
+                <Button variant="outline" size="sm">Upload File</Button>
+              </div>
+              <div className="text-center text-gray-500 dark:text-gray-400 text-sm pt-2">
+                No attachments yet
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

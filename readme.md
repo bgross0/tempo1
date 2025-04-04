@@ -104,26 +104,43 @@ For a complete development environment, you'll need:
 ## Project Structure
 
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── (auth)/             # Authentication routes
-│   ├── (dashboard)/        # Protected dashboard routes
-│   ├── api/                # API routes
-│   └── ...
-├── components/             # Shared components
-│   ├── ui/                 # UI components (shadcn)
-│   ├── forms/              # Form components
-│   └── ...
-├── features/               # Feature-specific components
-│   ├── tasks/              # Task management
-│   ├── projects/           # Project management
-│   ├── calendar/           # Calendar views
-│   ├── analytics/          # Analytics components
-│   └── ...
-├── lib/                    # Utility functions
-├── hooks/                  # Custom React hooks
-├── styles/                 # Global styles
-└── types/                  # TypeScript type definitions
+/
+├── src/                    # Application source code
+│   ├── app/                # Next.js App Router
+│   │   ├── (auth)/         # Authentication routes
+│   │   ├── (dashboard)/    # Protected dashboard routes
+│   │   ├── api/            # API routes
+│   │   └── ...
+│   ├── components/         # Shared components
+│   │   ├── ui/             # UI components (shadcn)
+│   │   ├── forms/          # Form components
+│   │   └── ...
+│   ├── features/           # Feature-specific components
+│   │   ├── tasks/          # Task management
+│   │   ├── projects/       # Project management
+│   │   ├── calendar/       # Calendar views
+│   │   ├── analytics/      # Analytics components
+│   │   └── ...
+│   ├── lib/                # Utility functions
+│   ├── hooks/              # Custom React hooks
+│   ├── styles/             # Global styles
+│   └── types/              # TypeScript type definitions
+├── public/                 # Static assets
+│   └── images/             # Images and icons
+├── scripts/                # Utility scripts
+│   ├── deployment/         # Deployment scripts
+│   ├── dev-tools/          # Development tools
+│   └── utils/              # Utility scripts
+├── db/                     # Database resources
+│   └── scripts/            # SQL scripts
+├── supabase/               # Supabase configuration
+│   ├── functions/          # Edge functions
+│   └── migrations/         # Database migrations
+├── docs/                   # Documentation
+├── cypress/                # E2E tests
+│   ├── e2e/                # Test specs
+│   └── fixtures/           # Test fixtures
+└── config files (.env, next.config.js, etc.)
 ```
 
 ## Development Workflow
@@ -195,6 +212,23 @@ npm run build
 # Start the production server
 npm run start
 ```
+
+### Development Utilities
+
+The project includes several utility scripts to help with development:
+
+```bash
+# Reset Next.js cache and temporary files
+node scripts/dev-tools/reset-next.js
+
+# Clean and rebuild the application
+node scripts/dev-tools/rebuild-clean.js
+
+# Start a minimal static server for testing
+node scripts/deployment/minimal-server.js
+```
+
+See the `scripts/` directory for more development utilities.
 
 ## Deployment
 

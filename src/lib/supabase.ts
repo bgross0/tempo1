@@ -26,6 +26,9 @@ export const supabase = createClient<Database>(
   }
 );
 
+// Singleton pattern for authenticated client to avoid multiple instances
+let authenticatedClient: ReturnType<typeof createClient<Database>> | null = null;
+
 // Create an authenticated Supabase client using the official pattern
 export const getAuthenticatedClient = async () => {
   try {
@@ -42,8 +45,13 @@ export const getAuthenticatedClient = async () => {
       throw new Error('Authentication required');
     }
     
+    // Return existing client if we already have one - prevents multiple instances
+    if (authenticatedClient) {
+      return authenticatedClient;
+    }
+    
     // Create a new client with the session token included in headers
-    return createClient<Database>(
+    authenticatedClient = createClient<Database>(
       supabaseUrl || '',
       supabaseAnonKey || '',
       {
@@ -59,6 +67,8 @@ export const getAuthenticatedClient = async () => {
         }
       }
     );
+    
+    return authenticatedClient;
   } catch (error) {
     console.error('Failed to get authenticated client:', error);
     throw error;

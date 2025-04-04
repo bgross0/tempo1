@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
@@ -24,48 +25,61 @@ export default function LoginPage() {
   
   // Check for already authenticated users and handle redirection
   useEffect(() => {
-    console.log('Login page mounted, checking auth state...');
-    
-    // Very simple check - if user exists, redirect directly to dashboard
-    // with a full page navigation, bypassing Next.js routing entirely
-    if (user) {
-      console.log('User already authenticated, redirecting to dashboard');
-      // Force a full page reload to the dashboard with absolute URL
-      // Use dynamically created absolute URL in case we're not on localhost
-      const baseUrl = window.location.origin;
-      window.location.assign(`${baseUrl}/dashboard`);
+    // Don't redirect if still loading auth state
+    if (authLoading) {
+      return;
     }
-  }, [user]);
+    
+    // Only redirect if we have a valid authenticated user from server verification
+    // The check only passes once server verification has completed (authLoading=false)
+    if (user && !authLoading) {
+      // Check if the user has recently verified their login (last 30 minutes)
+      const hasRecentAuth = user.last_sign_in_at && 
+        (new Date().getTime() - new Date(user.last_sign_in_at).getTime() < 30 * 60 * 1000);
+      
+      if (hasRecentAuth) {
+        console.log('User recently authenticated, redirecting to dashboard');
+        // Redirect to dashboard or the requested path
+        const baseUrl = window.location.origin;
+        window.location.assign(`${baseUrl}${redirectPath}`);
+      } else {
+        console.log('User has valid session but not recently authenticated');
+        // Let them stay on the login page - they might want to re-login or switch accounts
+      }
+    }
+  }, [user, authLoading, redirectPath]);
   
   // Get the redirectTo parameter if present
   useEffect(() => {
-    const redirectTo = searchParams.get('redirectTo');
-    if (redirectTo) {
-      console.log('Found redirectTo parameter:', redirectTo);
-      setRedirectPath(redirectTo);
-    }
-    
-    // Check for error indicators in the URL
-    const reason = searchParams.get('reason');
-    const error = searchParams.get('error');
-    
-    // Handle auth loop detection
-    if (error === 'auth_loop') {
-      setShowErrorReset(true);
-      toast({
-        variant: "destructive",
-        title: "Authentication Loop Detected",
-        description: "We've detected an authentication redirect loop. Please reset your auth state to continue.",
-      });
-    }
-    // Handle other auth errors
-    else if (reason === 'auth_error') {
-      setShowErrorReset(true);
-      toast({
-        variant: "destructive",
-        title: "Authentication error",
-        description: "There was a problem with your authentication state. Please log in again.",
-      });
+    if (searchParams) {
+      const redirectTo = searchParams.get('redirectTo');
+      if (redirectTo) {
+        console.log('Found redirectTo parameter:', redirectTo);
+        setRedirectPath(redirectTo);
+      }
+      
+      // Check for error indicators in the URL
+      const reason = searchParams.get('reason');
+      const error = searchParams.get('error');
+      
+      // Handle auth loop detection
+      if (error === 'auth_loop') {
+        setShowErrorReset(true);
+        toast({
+          variant: "destructive",
+          title: "Authentication Loop Detected",
+          description: "We've detected an authentication redirect loop. Please reset your auth state to continue.",
+        });
+      }
+      // Handle other auth errors
+      else if (reason === 'auth_error') {
+        setShowErrorReset(true);
+        toast({
+          variant: "destructive",
+          title: "Authentication error",
+          description: "There was a problem with your authentication state. Please log in again.",
+        });
+      }
     }
   }, [searchParams]);
 
@@ -114,11 +128,11 @@ export default function LoginPage() {
       if (data.session) {
         console.log('User:', data.user?.email);
         console.log('Access token present:', !!data.session.access_token);
-        console.log('Token expires at:', new Date(data.session.expires_at * 1000).toISOString());
+        console.log('Token expires at:', data.session.expires_at ? new Date(data.session.expires_at * 1000).toISOString() : 'unknown');
         
         toast({
           title: "Login successful",
-          description: "Redirecting to dashboard...",
+          description: "Redirecting...",
         });
         
         // Delay to allow session to be properly stored
@@ -129,9 +143,11 @@ export default function LoginPage() {
         const { data: verifySession } = await supabase.auth.getSession();
         console.log('Post-login session check:', verifySession.session ? 'Session stored' : 'No session stored!');
         
-        console.log('Redirecting to dashboard with window.location.replace...');
+        console.log(`Redirecting to ${redirectPath} with window.location.replace...`);
+        
+        // Use the redirect path from URL params if available, otherwise dashboard
         // Replace current location entirely to avoid navigation history issues
-        window.location.replace('/dashboard');
+        window.location.replace(redirectPath);
       } else {
         console.error('Login succeeded but no session was created!');
         toast({
@@ -164,6 +180,7 @@ export default function LoginPage() {
       if (typeof localStorage !== 'undefined') {
         localStorage.removeItem('tempo-auth-storage');
         localStorage.removeItem('supabase-auth-token');
+        localStorage.removeItem('tempo-auth-state'); // New persistence key
       }
       
       // Clear cookies
@@ -193,15 +210,29 @@ export default function LoginPage() {
     }
   };
 
+  // Show loading state if auth is being checked
+  if (authLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-500">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
       <Link
         href="/"
         className="absolute left-4 top-4 md:left-8 md:top-8"
       >
-        <img 
+        <Image 
           src="/images/logo.png" 
           alt="Tempo Logo" 
+          width={32}
+          height={32}
           className="h-8 w-auto" 
         />
       </Link>
@@ -225,7 +256,7 @@ export default function LoginPage() {
                   <h3 className="text-sm font-medium text-red-800">Authentication Error Detected</h3>
                   <div className="mt-2 text-sm text-red-700">
                     <p>
-                      We've detected an issue with your authentication state, which may be causing redirect loops 
+                      We&apos;ve detected an issue with your authentication state, which may be causing redirect loops 
                       or preventing you from logging in properly.
                     </p>
                     <p className="mt-1">
@@ -295,6 +326,7 @@ export default function LoginPage() {
             
             <Button 
               type="submit" 
+              variant="tempo"
               className="w-full"
               disabled={isLoading}
             >
@@ -336,7 +368,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 text-center">
           <div className="text-sm text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link 
               href="/signup"
               className="text-blue-600 hover:text-blue-500 font-medium"

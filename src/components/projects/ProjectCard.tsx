@@ -182,7 +182,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the project "{project.name}" and all of its tasks.
+              This will permanently delete the project &quot;{project.name}&quot; and all of its tasks.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

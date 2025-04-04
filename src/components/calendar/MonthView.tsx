@@ -40,6 +40,7 @@ export default function MonthView({ date }: MonthViewProps) {
       (task.scheduledBlocks && task.scheduledBlocks.some(block => block.date === dateString))
     );
     
+    // Filter events by date
     const dayEvents = events.filter(event => {
       const startDate = event.startDate;
       const endDate = event.endDate;
@@ -48,7 +49,24 @@ export default function MonthView({ date }: MonthViewProps) {
       return (startDate <= dateString && endDate >= dateString);
     });
     
-    return { tasks: dayTasks, events: dayEvents };
+    // Convert events to database format that EventCard component expects
+    const formattedEvents = dayEvents.map(event => ({
+      id: event.id,
+      user_id: "00000000-0000-0000-0000-000000000000", // Default user ID for type safety
+      name: event.name,
+      description: event.description || null,
+      start_date: event.startDate,
+      start_time: event.startTime,
+      end_date: event.endDate,
+      end_time: event.endTime,
+      location: event.location || null,
+      recurring: event.recurring,
+      tags: event.tags,
+      created_at: event.createdAt,
+      updated_at: event.createdAt || new Date().toISOString()
+    }));
+    
+    return { tasks: dayTasks, events: formattedEvents };
   };
   
   // Handle date click

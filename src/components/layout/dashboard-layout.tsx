@@ -2,6 +2,7 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { 
   Calendar, 
@@ -13,7 +14,10 @@ import {
   X, 
   LogOut, 
   User, 
-  Home 
+  Home, 
+  Search,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -22,6 +26,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { ThemeToggle } from './ThemeToggle';
 import { useDarkMode } from '@/hooks/useDarkMode';
+import { useAppStore } from '@/lib/store/app-store';
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { CommandPalette } from '@/components/command-palette';
+import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog';
+import { useKeyboardShortcuts } from '@/lib/keyboard-shortcuts';
 
 interface NavItemProps {
   href: string;
@@ -32,6 +47,32 @@ interface NavItemProps {
 function NavItem({ href, icon, label }: NavItemProps) {
   const pathname = usePathname();
   const isActive = pathname === href;
+  const { sidebarCollapsed } = useAppStore();
+
+  if (sidebarCollapsed) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link 
+              href={href}
+              className={cn(
+                "flex items-center justify-center rounded-lg p-2 transition-all",
+                isActive 
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:bg-opacity-20 dark:text-blue-300" 
+                  : "text-gray-600 dark:text-gray-300 hover:text-blue-900 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              )}
+            >
+              {icon}
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {label}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <Link 
@@ -51,17 +92,28 @@ function NavItem({ href, icon, label }: NavItemProps) {
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { 
+    sidebarCollapsed, 
+    setSidebarCollapsed,
+    setCommandPaletteOpen 
+  } = useAppStore();
   const { signOut, user } = useAuth();
   const { isDarkMode } = useDarkMode();
+  const pathname = usePathname();
+  const { handleKeyDown } = useKeyboardShortcuts();
 
-  // Apply dark mode to body
+  // Dark mode application temporarily disabled
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+    console.log("Dark mode changes disabled");
+    // Force light mode for now
+    document.documentElement.classList.remove('dark');
+  }, []);
+  
+  // Register keyboard shortcuts
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   const handleSignOut = async () => {
     try {
@@ -101,42 +153,68 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar with collapsible support */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-white dark:bg-gray-800 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 transform bg-white dark:bg-gray-800 transition-all duration-200 ease-in-out lg:static lg:translate-x-0",
+          sidebarCollapsed ? "w-16" : "w-64",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         <div className="flex h-full flex-col">
-          {/* Sidebar header */}
+          {/* Sidebar header with logo and collapse toggle */}
           <div className="flex h-16 items-center justify-between px-4 border-b dark:border-gray-700">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <img 
+              <Image 
                 src="/images/logo.png" 
                 alt="Tempo Logo" 
+                width={32}
+                height={32}
                 className="h-8 w-auto" 
               />
+              {!sidebarCollapsed && <span className="font-semibold">TaskJet</span>}
             </Link>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="hidden lg:flex"
+              >
+                {sidebarCollapsed ? (
+                  <ChevronRight className="h-5 w-5" />
+                ) : (
+                  <ChevronLeft className="h-5 w-5" />
+                )}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setSidebarOpen(false)}
+                className="lg:hidden"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
-          {/* User info */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-gray-700">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white">
-              {userInitial}
+          {/* User info with responsive layout */}
+          <div className={cn(
+            "flex items-center gap-3 px-4 py-3 border-b dark:border-gray-700",
+            sidebarCollapsed && "justify-center px-2"
+          )}>
+            <div className="shrink-0">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-blue-600 text-white">{userInitial}</AvatarFallback>
+                {user?.avatar_url && <AvatarImage src={user.avatar_url} alt={userName} />}
+              </Avatar>
             </div>
-            <div>
-              <p className="font-medium">{userName}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="overflow-hidden">
+                <p className="font-medium truncate">{userName}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+              </div>
+            )}
           </div>
 
           {/* Navigation */}
@@ -154,11 +232,14 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="border-t dark:border-gray-700 p-4">
             <Button
               variant="outline"
-              className="w-full justify-start gap-2"
+              className={cn(
+                "w-full", 
+                sidebarCollapsed ? "justify-center p-2" : "justify-start gap-2"
+              )}
               onClick={handleSignOut}
             >
               <LogOut className="h-4 w-4" />
-              Sign out
+              {!sidebarCollapsed && <span>Sign out</span>}
             </Button>
           </div>
         </div>
@@ -177,7 +258,32 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             <Menu className="h-5 w-5" />
           </Button>
 
-          <div className="flex items-center gap-2 ml-auto">
+          {/* Search on medium+ screens */}
+          <div className="hidden md:flex items-center relative mx-auto max-w-md w-full">
+            <button
+              onClick={() => setCommandPaletteOpen(true)}
+              className="w-full inline-flex items-center rounded-md border border-input bg-transparent px-4 py-2 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground h-9"
+            >
+              <Search className="mr-2 h-4 w-4" />
+              <span>Search or use commands...</span>
+              <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </button>
+          </div>
+          
+          {/* Command button on small screens */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setCommandPaletteOpen(true)}
+            className="md:hidden"
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+
+          <div className="flex items-center gap-2">
+            <KeyboardShortcutsDialog />
             <ThemeToggle />
             <Button variant="ghost" size="icon">
               <User className="h-5 w-5" />
@@ -192,6 +298,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
+      
+      {/* Add the command palette component */}
+      <CommandPalette />
     </div>
   );
 }

@@ -1,0 +1,136 @@
+#!/usr/bin/env node
+
+/**
+ * Next.js Complete Clean and Rebuild Script
+ * 
+ * This script performs a thorough cleanup and rebuild of a Next.js application
+ * to resolve issues with corrupted builds, middleware problems, and missing modules.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+console.log('🧹 Starting complete Next.js cleanup and rebuild...');
+
+// Define paths
+const ROOT_DIR = process.cwd();
+const NEXT_DIR = path.join(ROOT_DIR, '.next');
+const NODE_MODULES = path.join(ROOT_DIR, 'node_modules');
+const NEXT_CONFIG = path.join(ROOT_DIR, 'next.config.js');
+const MIDDLEWARE = path.join(ROOT_DIR, 'src', 'middleware.ts');
+
+// 1. Stop any running Next.js processes
+try {
+  console.log('🛑 Stopping any running Next.js processes...');
+  execSync('npx kill-port 3000 3001 3002 3003', { stdio: 'inherit' });
+  console.log('✅ Stopped running processes');
+} catch (error) {
+  console.log('⚠️ No processes found or could not stop processes. Continuing...');
+}
+
+// 2. Remove .next directory completely
+try {
+  console.log('🗑️ Removing .next directory...');
+  if (fs.existsSync(NEXT_DIR)) {
+    if (process.platform === 'win32') {
+      // Windows needs special handling for locked files
+      try {
+        execSync('rmdir /s /q ".next"', { stdio: 'inherit' });
+      } catch (error) {
+        console.log('⚠️ Could not remove .next directory with rmdir, trying alternative method...');
+        // Rename and then delete as a workaround for locked files
+        const tempDir = `${NEXT_DIR}_to_delete_${Date.now()}`;
+        fs.renameSync(NEXT_DIR, tempDir);
+        execSync(`rmdir /s /q "${tempDir}"`, { stdio: 'inherit' });
+      }
+    } else {
+      // Unix-based systems
+      execSync('rm -rf .next', { stdio: 'inherit' });
+    }
+    console.log('✅ Removed .next directory');
+  } else {
+    console.log('ℹ️ .next directory does not exist, skipping removal');
+  }
+} catch (error) {
+  console.error('❌ Failed to remove .next directory:', error.message);
+  console.log('⚠️ You may need to manually delete the .next directory');
+}
+
+// 3. Create minimal middleware.ts
+try {
+  console.log('📝 Creating minimal middleware.ts...');
+  const minimalMiddleware = `
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+// Extremely minimal middleware - no auth checks, no redirects
+export async function middleware(req: NextRequest) {
+  console.log('MINIMAL MIDDLEWARE:', req.nextUrl.pathname);
+  return NextResponse.next();
+}
+
+// Only apply middleware to API routes to avoid redirect loops
+export const config = {
+  matcher: ['/api/:path*'],
+};
+`;
+  
+  fs.writeFileSync(MIDDLEWARE, minimalMiddleware);
+  console.log('✅ Created minimal middleware.ts');
+} catch (error) {
+  console.error('❌ Failed to create minimal middleware.ts:', error.message);
+}
+
+// 4. Create minimal next.config.js
+try {
+  console.log('📝 Creating minimal next.config.js...');
+  const minimalConfig = `
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+};
+
+module.exports = nextConfig;
+`;
+  
+  fs.writeFileSync(NEXT_CONFIG, minimalConfig);
+  console.log('✅ Created minimal next.config.js');
+} catch (error) {
+  console.error('❌ Failed to create minimal next.config.js:', error.message);
+}
+
+// 5. Clear npm cache
+try {
+  console.log('🧹 Clearing npm cache...');
+  execSync('npm cache clean --force', { stdio: 'inherit' });
+  console.log('✅ Cleared npm cache');
+} catch (error) {
+  console.error('❌ Failed to clear npm cache:', error.message);
+}
+
+// 6. Run npm install
+try {
+  console.log('📦 Running npm install...');
+  execSync('npm install', { stdio: 'inherit' });
+  console.log('✅ Completed npm install');
+} catch (error) {
+  console.error('❌ Failed to run npm install:', error.message);
+}
+
+// 7. Build the application
+try {
+  console.log('🏗️ Building the application...');
+  execSync('npm run build', { stdio: 'inherit' });
+  console.log('✅ Build completed successfully');
+} catch (error) {
+  console.error('❌ Build failed:', error.message);
+  console.log('⚠️ You may need to fix issues before a successful build');
+}
+
+console.log('\n🎉 Clean-rebuild process complete!');
+console.log('\nNext steps:');
+console.log('1. Run "npm run dev" to start the development server');
+console.log('2. If issues persist, check for errors in the console');
+console.log('3. You may need to restart your terminal or IDE');

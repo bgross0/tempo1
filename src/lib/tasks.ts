@@ -27,6 +27,7 @@ export async function getTasks(userId: string) {
     hardDeadline: task.hard_deadline,
     tags: task.tags,
     completed: task.completed,
+    status: task.status || 'todo',
     scheduledBlocks: task.scheduled_blocks,
     createdAt: task.created_at,
     updatedAt: task.updated_at
@@ -51,6 +52,7 @@ export async function createTask(task: Omit<Task, 'id' | 'createdAt' | 'updatedA
       hard_deadline: task.hardDeadline,
       tags: task.tags,
       completed: task.completed,
+      status: task.status || 'todo',
       scheduled_blocks: task.scheduledBlocks
     })
     .select()
@@ -77,6 +79,7 @@ export async function updateTask(task: Task) {
       hard_deadline: task.hardDeadline,
       tags: task.tags,
       completed: task.completed,
+      status: task.status,
       scheduled_blocks: task.scheduledBlocks,
       updated_at: new Date().toISOString()
     })

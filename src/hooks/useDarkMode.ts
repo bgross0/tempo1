@@ -1,56 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
 
+// Simplified version that doesn't modify HTML classes
 export function useDarkMode() {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme') as Theme | null;
-      return savedTheme || 'system';
-    }
-    return 'system';
-  });
-  
+  const [theme, setTheme] = useState<Theme>('light');
   const [isDarkMode, setIsDarkMode] = useState(false);
   
-  // Update the theme in localStorage and HTML element
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('theme', theme);
-      
-      // Apply theme
-      const isDark = 
-        theme === 'dark' || 
-        (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      
-      setIsDarkMode(isDark);
-      
-      if (isDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-  }, [theme]);
+  // Basic function that doesn't actually do anything
+  // This is temporary to disable the dark mode functionality
+  const setThemeNoOp = (newTheme: Theme) => {
+    console.log("Theme changing disabled temporarily", newTheme);
+    // Don't actually set the theme
+  };
   
-  // Listen for system theme changes
-  useEffect(() => {
-    if (typeof window !== 'undefined' && theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      
-      const handleChange = () => {
-        setIsDarkMode(mediaQuery.matches);
-        if (mediaQuery.matches) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      };
-      
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, [theme]);
-  
-  return { theme, setTheme, isDarkMode };
+  return { 
+    theme, 
+    setTheme: setThemeNoOp, 
+    isDarkMode: false 
+  };
 }

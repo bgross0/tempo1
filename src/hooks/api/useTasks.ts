@@ -119,15 +119,24 @@ export function useTasks(filters: TaskFilters = {}) {
         const authedClient = await getAuthenticatedClient();
         console.log('Successfully created authenticated client for task creation');
         
-        // Create a minimal task object with only required fields to avoid format issues
+        // Create a task object with proper type handling
         const taskData = {
           user_id: String(newTask.user_id),
           name: String(newTask.name).trim(),
+          description: newTask.description,
           due_date: String(newTask.due_date),
+          due_time: newTask.due_time,
+          start_date: newTask.start_date,
+          // Convert null to undefined for time fields to avoid type errors
+          start_time: newTask.start_time || undefined,
           priority: (newTask.priority === 'high' || newTask.priority === 'medium' || newTask.priority === 'low') 
             ? newTask.priority 
             : 'medium',
-          completed: false,
+          status: newTask.status || 'todo',
+          duration: newTask.duration,
+          chunk_size: newTask.chunk_size,
+          hard_deadline: Boolean(newTask.hard_deadline),
+          completed: Boolean(newTask.completed),
           tags: Array.isArray(newTask.tags) ? newTask.tags : []
         };
         

@@ -12,6 +12,7 @@ type TaskFilters = {
   tags?: string[];
   due_date_start?: string;
   due_date_end?: string;
+  status?: 'todo' | 'in-progress' | 'completed';
 };
 
 export function useTasksRealtime(filters: TaskFilters = {}) {
@@ -56,6 +57,10 @@ export function useTasksRealtime(filters: TaskFilters = {}) {
       if (filters.due_date_end) {
         query = query.lte('due_date', filters.due_date_end);
       }
+      
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
 
       // Always order by due date
       query = query.order('due_date', { ascending: true });
@@ -73,7 +78,7 @@ export function useTasksRealtime(filters: TaskFilters = {}) {
       return [];
     }
   }, [user, filters.completed, filters.priority, filters.project_id, 
-      filters.tags, filters.due_date_start, filters.due_date_end]);
+      filters.tags, filters.due_date_start, filters.due_date_end, filters.status]);
 
   // Use the user ID as part of the cache key
   const cacheKey = user ? ['tasks', user.id, JSON.stringify(filters)] : null;
@@ -89,17 +94,44 @@ export function useTasksRealtime(filters: TaskFilters = {}) {
       channelRef.current.unsubscribe();
     }
     
-    // Create new subscription
+    // Create subscription ID based on filters to prevent multiple similar subscriptions
+    const filtersHash = JSON.stringify(filters);
+    const channelId = `tasks-changes-${user.id}-${filtersHash.substring(0, 20)}`;
+    
+    // Create new subscription with more specific filters to reduce unnecessary updates
     channelRef.current = supabase
-      .channel('tasks-changes')
+      .channel(channelId)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'tasks',
         filter: `user_id=eq.${user.id}`,
-      }, () => {
-        // Refresh data when changes occur
-        mutate();
+      }, (payload) => {
+        // Check if the change is relevant to our current filters before mutating
+        let shouldUpdate = true;
+        
+        // Only update if the changed task matches our filters
+        if (payload.new && filters) {
+          if (filters.completed !== undefined && payload.new.completed !== filters.completed) {
+            shouldUpdate = false;
+          }
+          if (filters.priority && payload.new.priority !== filters.priority) {
+            shouldUpdate = false;
+          }
+          if (filters.project_id !== undefined && payload.new.project_id !== filters.project_id) {
+            shouldUpdate = false;
+          }
+          if (filters.status && payload.new.status !== filters.status) {
+            shouldUpdate = false;
+          }
+        }
+        
+        if (shouldUpdate) {
+          console.log('Task change detected that matches filters, updating...');
+          mutate();
+        } else {
+          console.log('Task change detected but does not match filters, ignoring...');
+        }
       })
       .subscribe();
     
@@ -110,7 +142,7 @@ export function useTasksRealtime(filters: TaskFilters = {}) {
         channelRef.current = null;
       }
     };
-  }, [user, mutate]);
+  }, [user, mutate, filters]);
 
   // Create a new task
   const createTask = useCallback(async (newTask: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {

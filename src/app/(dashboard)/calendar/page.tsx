@@ -68,6 +68,7 @@ export default function CalendarPage() {
           hardDeadline: task.hard_deadline,
           tags: task.tags || [],
           completed: task.completed,
+          status: task.status || 'todo', // Add the status field with a default value
           createdAt: task.created_at,
           // Use our safely parsed scheduledBlocks
           scheduledBlocks: scheduledBlocks

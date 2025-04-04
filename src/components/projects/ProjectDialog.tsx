@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle,
+  DialogDescription,
   DialogTrigger
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -45,8 +47,14 @@ export default function ProjectDialog({
           description: "Your project has been successfully updated."
         });
       } else {
+        // Get current session to extract user ID
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session || !sessionData.session.user) {
+          throw new Error('User not authenticated - Cannot create project');
+        }
+
         await createProject({
-          user_id: 'current-user', // This should be dynamic in a real app
+          user_id: sessionData.session.user.id,
           ...data,
           completed: false
         });
@@ -72,6 +80,9 @@ export default function ProjectDialog({
       <DialogContent className="max-w-md md:max-w-xl">
         <DialogHeader>
           <DialogTitle>{project ? 'Edit Project' : 'Create Project'}</DialogTitle>
+          <DialogDescription>
+            {project ? 'Update the details of your existing project' : 'Create a new project to organize your tasks'}
+          </DialogDescription>
           <Button
             onClick={() => setIsOpen(false)}
             variant="ghost"

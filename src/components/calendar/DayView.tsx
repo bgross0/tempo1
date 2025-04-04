@@ -3,6 +3,7 @@ import { format, addHours, startOfDay } from 'date-fns';
 import { useAppStore } from '@/lib/store';
 import TaskCard from '@/components/tasks/TaskCard';
 import EventCard from '@/components/events/EventCard';
+import { Event as DatabaseEvent } from '@/types/database';
 
 interface DayViewProps {
   date: Date;
@@ -83,7 +84,7 @@ export default function DayView({ date }: DayViewProps) {
               return isMultiDay;
             })
             .map(event => (
-              <EventCard key={event.id} event={event} minimal />
+              <EventCard key={event.id} event={event as unknown as DatabaseEvent} minimal />
             ))}
         </div>
       </div>
@@ -122,7 +123,7 @@ export default function DayView({ date }: DayViewProps) {
                     return !isMultiDay;
                   })
                   .map(event => (
-                    <EventCard key={event.id} event={event} />
+                    <EventCard key={event.id} event={event as unknown as DatabaseEvent} />
                   ))}
               </div>
             </div>

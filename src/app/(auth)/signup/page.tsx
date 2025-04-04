@@ -126,6 +126,7 @@ export default function SignupPage() {
             
             <Button 
               type="submit" 
+              variant="tempo"
               className="w-full"
               disabled={isLoading}
             >

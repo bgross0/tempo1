@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { CheckCircle, Clock, BarChart3, Calendar, Target, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -10,9 +11,11 @@ export default function HomePage() {
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center">
-              <img 
+              <Image 
                 src="/images/logo.png" 
                 alt="Tempo Logo" 
+                width={32}
+                height={32}
                 className="h-8 w-auto" 
               />
             </Link>

@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import AppErrorBoundary from './error-boundary';
+import { AuthLoadingSkeleton } from '@/components/loading-skeleton';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, isLoading: authContextLoading } = useAuth();
@@ -123,7 +124,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       clearTimeout(timeoutId);
       clearTimeout(authCheckDelay);
     };
-  }, [user, authContextLoading]);
+  }, [user, authContextLoading, isCheckingAuth]);
   
   // Enhanced redirect logic with detailed session checking
   useEffect(() => {
@@ -176,27 +177,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       
       return () => clearTimeout(redirectTimer);
     }
-  }, [isCheckingAuth, authContextLoading, user]);
+  }, [isCheckingAuth, authContextLoading, user, setIsAuthenticated]);
   
-  // Show loading state
+  // Show skeleton loading state
   if (isCheckingAuth || authContextLoading) {
-    const elapsedTime = Date.now() - checkStartTime.current;
-    const showExtendedMessage = elapsedTime > 3000;
-    
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-500">Loading your dashboard...</p>
-          
-          {showExtendedMessage && (
-            <p className="text-gray-400 text-sm mt-2">
-              This is taking longer than usual. Please wait a moment...
-            </p>
-          )}
-        </div>
-      </div>
-    );
+    return <AuthLoadingSkeleton />;
   }
   
   // Render children with error boundary if authenticated

@@ -39,7 +39,7 @@ export function TaskFilters({
       completed: showCompleted,
       priority: priority,
     });
-  }, [showCompleted, priority]);
+  }, [showCompleted, priority, filters, onChange]);
 
   const resetFilters = () => {
     setShowCompleted(false);

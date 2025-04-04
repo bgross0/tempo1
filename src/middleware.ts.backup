@@ -1,0 +1,13 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+// Minimal middleware - no auth checks or redirects
+export async function middleware(req: NextRequest) {
+  // Just pass through all requests
+  return NextResponse.next();
+}
+
+// Match only API routes to minimize impact
+export const config = {
+  matcher: [],
+};

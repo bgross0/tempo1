@@ -21,6 +21,7 @@ export interface Task {
   created_at: string; // ISO datetime
   updated_at: string; // ISO datetime
   scheduled_blocks: Json | null; // Match with Supabase schema (JSONB field)
+  status: 'todo' | 'in-progress' | 'completed'; // Task status for kanban view
 }
 
 export interface ScheduledBlock {

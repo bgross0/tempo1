@@ -16,7 +16,7 @@ const AppErrorFallback = ({ resetErrorBoundary }: { resetErrorBoundary: () => vo
       <div className="max-w-md mx-auto text-center p-8 border rounded-lg bg-background shadow-sm">
         <h2 className="text-2xl font-semibold mb-4">Something went wrong</h2>
         <p className="text-muted-foreground mb-6">
-          We've encountered an unexpected error. You can try refreshing the page or return to the dashboard.
+          We&apos;ve encountered an unexpected error. You can try refreshing the page or return to the dashboard.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button onClick={resetErrorBoundary} variant="outline" className="flex items-center gap-2">
@@ -41,12 +41,19 @@ const AppErrorBoundary: React.FC<AppErrorBoundaryProps> = ({ children }) => {
     console.error('Application error:', error);
   };
 
+  // Create a fallback component with the resetErrorBoundary function from our component
+  const fallbackElement = (
+    <AppErrorFallback resetErrorBoundary={() => {
+      // Reset the error state in the ErrorBoundary component
+      console.log('Resetting error boundary');
+    }} />
+  );
+
   return (
     <ErrorBoundary
       onError={handleError}
-      fallback={({ resetErrorBoundary }) => (
-        <AppErrorFallback resetErrorBoundary={resetErrorBoundary} />
-      )}
+      fallback={fallbackElement}
+      onReset={() => console.log('Error boundary reset')}
     >
       {children}
     </ErrorBoundary>

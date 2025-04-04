@@ -13,26 +13,15 @@ export function Providers({ children }: { children: ReactNode }) {
     setMounted(true);
   }, []);
 
-  // Apply theme from localStorage when component mounts
+  // Root provider - intentionally NOT setting dark mode class here
+  // Let the useDarkMode hook handle the dark mode class to avoid conflicts
   useEffect(() => {
     if (mounted) {
-      // Check for theme in localStorage
-      const theme = localStorage.getItem('theme');
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      
-      // Apply dark mode if explicitly set or if system prefers dark and no preference is saved
-      if (
-        theme === 'dark' || 
-        (theme === 'system' && systemPrefersDark) || 
-        (!theme && systemPrefersDark)
-      ) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      console.log("Root providers mounted - dark mode will be handled by useDarkMode hook");
     }
   }, [mounted]);
 
+  // Always render children to avoid hydration issues
   return (
     <AuthProvider>
       <AppStoreProvider>

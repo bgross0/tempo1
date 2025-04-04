@@ -223,14 +223,28 @@ function parseTimeStr(dateStr: string, timeStr: string): Date {
 }
 
 /**
+ * Helper function to ensure that scheduled blocks have the required taskId
+ */
+function ensureTaskId(blocks: any[], taskId: string): ScheduledBlock[] {
+  return blocks.map(block => ({
+    date: block.date,
+    startTime: block.startTime,
+    endTime: block.endTime,
+    taskId: block.taskId || taskId // Use existing taskId or add it if missing
+  }));
+}
+
+/**
  * Updates a task's scheduled blocks
  */
 export async function updateTaskSchedule(
   taskId: string, 
-  scheduledBlocks: ScheduledBlock[],
+  scheduledBlocks: any[],
   updateTaskFn: (id: string, data: any) => Promise<any>
 ): Promise<void> {
-  await updateTaskFn(taskId, { scheduled_blocks: scheduledBlocks });
+  // Ensure all blocks have taskId
+  const normalizedBlocks = ensureTaskId(scheduledBlocks, taskId);
+  await updateTaskFn(taskId, { scheduled_blocks: normalizedBlocks });
 }
 
 /**

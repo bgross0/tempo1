@@ -10,7 +10,10 @@ import {
   AlertTriangle, 
   Calendar as CalendarIcon,
   BarChart3,
-  ArrowRight
+  ArrowRight,
+  Settings,
+  LineChart,
+  User
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -19,6 +22,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasksRealtime } from '@/hooks/api/useTasksRealtime';
 import { useProjectsRealtime } from '@/hooks/api/useProjectsRealtime';
+
+// Import settings dialog
+import { SettingsDialog } from '@/components/settings-dialog';
 
 // Import our custom dashboard components
 import DashboardStats from '@/components/dashboard/DashboardStats';
@@ -31,6 +37,7 @@ export default function DashboardPage() {
   const { tasks } = useTasksRealtime();
   const { projects } = useProjectsRealtime();
   const [activeTab, setActiveTab] = useState('overview');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
   // Get current date to filter tasks due today
   const today = new Date();
@@ -55,9 +62,12 @@ export default function DashboardPage() {
   const userName = user?.email?.split('@')[0] || 'there';
 
   return (
-    <div className="space-y-6">
+    <div className="w-full">
+      {/* Show settings dialog when settings is clicked */}
+      {settingsOpen && <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />}
+      
       {/* Header Section */}
-      <section className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <section className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">
             Good {getGreeting()}, {userName}!
@@ -74,7 +84,7 @@ export default function DashboardPage() {
               New Task
             </Link>
           </Button>
-          <Button asChild size="sm">
+          <Button asChild variant="tempo" size="sm">
             <Link href="/projects?create=true">
               <Plus className="h-4 w-4 mr-1" />
               New Project
@@ -87,7 +97,7 @@ export default function DashboardPage() {
       <DashboardStats tasks={tasks} projects={projects} />
       
       {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" onValueChange={setActiveTab} className="space-y-4">
+      <Tabs defaultValue="overview" onValueChange={setActiveTab} className="space-y-4 mt-6">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="today">Today's Tasks</TabsTrigger>
@@ -159,7 +169,7 @@ export default function DashboardPage() {
                   {projects.filter(p => !p.completed).length === 0 && (
                     <div className="text-center py-6">
                       <p className="text-gray-500">No active projects</p>
-                      <Button asChild className="mt-2">
+                      <Button asChild variant="tempo" className="mt-2">
                         <Link href="/projects?create=true">
                           <Plus className="mr-1 h-4 w-4" />
                           Create Project
@@ -237,7 +247,7 @@ export default function DashboardPage() {
                   <p className="text-gray-500 mt-1">
                     You have no tasks due today
                   </p>
-                  <Button className="mt-4" asChild>
+                  <Button className="mt-4" variant="tempo" asChild>
                     <Link href="/tasks?create=true">
                       <Plus className="mr-2 h-4 w-4" />
                       Create Task

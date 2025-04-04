@@ -39,7 +39,7 @@ export function ProjectFilters({
       completed: showCompleted,
       priority: priority,
     });
-  }, [showCompleted, priority]);
+  }, [showCompleted, priority, filters, onChange]);
 
   const resetFilters = () => {
     setShowCompleted(false);

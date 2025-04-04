@@ -16,6 +16,7 @@ export const taskSchema = z.object({
   hard_deadline: z.boolean().default(false),
   project_id: z.string().nullable().optional(),
   tags: z.array(z.string()).default([]),
+  status: z.enum(['todo', 'in-progress', 'completed']).default('todo'),
 });
 
 // Infer the TypeScript type from the schema

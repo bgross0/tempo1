@@ -25,7 +25,7 @@ export default function VerifyEmailPage() {
       if (!session) {
         router.push('/login');
       } else {
-        setEmail(session.user.email);
+        setEmail(session.user.email || null);
         
         // If email is already confirmed, redirect to dashboard
         if (session.user.email_confirmed_at) {
@@ -117,11 +117,11 @@ export default function VerifyEmailPage() {
           ) : (
             <div className="text-center space-y-4 w-full">
               <p className="text-sm text-gray-600">
-                We've sent a verification email to{' '}
+                We&apos;ve sent a verification email to{' '}
                 <span className="font-semibold">{email}</span>
               </p>
               <p className="text-sm text-gray-500">
-                Click the link in the email to verify your account. If you don't see the email, check your spam folder.
+                Click the link in the email to verify your account. If you don&apos;t see the email, check your spam folder.
               </p>
               <Button
                 variant="outline"

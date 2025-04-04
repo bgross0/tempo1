@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Reset password</CardTitle>
           <CardDescription className="text-center">
-            Enter your email address and we'll send you a link to reset your password
+            Enter your email address and we&apos;ll send you a link to reset your password
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
               </div>
               <h3 className="text-lg font-medium">Check your email</h3>
               <p className="text-sm text-gray-500">
-                We've sent a password reset link to <span className="font-medium">{email}</span>
+                We&apos;ve sent a password reset link to <span className="font-medium">{email}</span>
               </p>
               <Button
                 variant="outline"

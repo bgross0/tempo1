@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emergency Auth State Clearer</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      background-color: #f7f7f7;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #2c3e50;
+      margin-top: 0;
+    }
+    .button {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    .button:hover {
+      background-color: #c0392b;
+    }
+    .results {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border-left: 4px solid #2c3e50;
+    }
+    .success {
+      color: #27ae60;
+      font-weight: bold;
+    }
+    .error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Emergency Auth State Clearer</h1>
+    <p>This tool will clear all authentication-related data from your browser. Use this if you're experiencing issues with auth state like being automatically logged in or redirect loops.</p>
+    
+    <button id="clearButton" class="button">Clear All Auth State</button>
+    
+    <div id="results" class="results" style="display: none;"></div>
+  </div>
+
+  <script>
+    // State indicating if we're running in a browser environment
+    const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+
+    // List of auth-related localStorage keys to clear
+    const localStorageKeysToRemove = [
+      'tempo-auth-state',
+      'supabase-auth-token',
+      'supabase.auth.token',
+      'tempo-auth-storage',
+      'sb-auth-data',
+      // Add any potentially relevant keys here
+      'supabase.auth.refreshToken',
+      'supabase.auth.expiresAt'
+    ];
+
+    // List of auth-related cookies to clear
+    const cookiesToRemove = [
+      'tempo-auth-state',
+      'supabase-auth-token',
+      'sb-auth-token',
+      'sb-refresh-token',
+      // Add any other potentially relevant cookies here
+      'sb-access-token',
+      '__session'
+    ];
+
+    // Clear localStorage items
+    function clearLocalStorage() {
+      const results = [];
+      
+      try {
+        // Try to clear specific keys first
+        localStorageKeysToRemove.forEach(key => {
+          try {
+            const hadValue = localStorage.getItem(key) !== null;
+            localStorage.removeItem(key);
+            results.push({
+              type: 'localStorage',
+              key,
+              success: true,
+              hadValue
+            });
+          } catch (err) {
+            results.push({
+              type: 'localStorage',
+              key,
+              success: false,
+              error: err.message
+            });
+          }
+        });
+      } catch (err) {
+        results.push({
+          type: 'localStorage',
+          key: 'ALL',
+          success: false,
+          error: err.message
+        });
+      }
+      
+      return results;
+    }
+
+    // Clear cookies
+    function clearCookies() {
+      const results = [];
+      
+      try {
+        // For each cookie name to remove
+        cookiesToRemove.forEach(cookieName => {
+          try {
+            // Try to determine if cookie exists
+            const allCookies = document.cookie.split(';');
+            const cookieExists = allCookies.some(c => c.trim().startsWith(`${cookieName}=`));
+            
+            // Clear with path=/
+            document.cookie = `${cookieName}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+            // Also try with secure and SameSite flags
+            document.cookie = `${cookieName}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; SameSite=Strict`;
+            
+            results.push({
+              type: 'cookie',
+              key: cookieName,
+              success: true,
+              hadValue: cookieExists
+            });
+          } catch (err) {
+            results.push({
+              type: 'cookie',
+              key: cookieName,
+              success: false,
+              error: err.message
+            });
+          }
+        });
+      } catch (err) {
+        results.push({
+          type: 'cookie',
+          key: 'ALL',
+          success: false,
+          error: err.message
+        });
+      }
+      
+      return results;
+    }
+
+    // Function to run when the clear button is clicked
+    function clearAuthState() {
+      const localStorageResults = clearLocalStorage();
+      const cookieResults = clearCookies();
+      const allResults = [...localStorageResults, ...cookieResults];
+      
+      displayResults(allResults);
+      
+      console.log('Auth state clearing complete!');
+      return allResults;
+    }
+
+    // Display results in the UI
+    function displayResults(results) {
+      const resultsElement = document.getElementById('results');
+      resultsElement.style.display = 'block';
+      
+      let html = '<h3>Clearing Results:</h3><ul>';
+      
+      results.forEach(result => {
+        const icon = result.success ? '✅' : '❌';
+        const valueInfo = result.hadValue ? ' (had value)' : ' (was empty)';
+        const cssClass = result.success ? 'success' : 'error';
+        const errorInfo = result.error ? ` - Error: ${result.error}` : '';
+        
+        html += `<li><span class="${cssClass}">${icon} ${result.type}: ${result.key}${valueInfo}${errorInfo}</span></li>`;
+      });
+      
+      html += '</ul><p><strong>What to do next:</strong></p>';
+      html += '<ol>';
+      html += '<li>Reload the login page</li>';
+      html += '<li>Try logging in with your credentials</li>';
+      html += '<li>If issues persist, try clearing browser cache or using incognito mode</li>';
+      html += '</ol>';
+      
+      resultsElement.innerHTML = html;
+    }
+
+    // Add click handler to the button
+    document.getElementById('clearButton').addEventListener('click', clearAuthState);
+  </script>
+</body>
+</html>

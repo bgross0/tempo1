@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emergency Page</title>
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+      color: #333;
+      background: #f8f9fa;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    h1 { 
+      color: #0070f3;
+      margin-bottom: 10px;
+    }
+    p { margin-bottom: 20px; }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .error { color: #d32f2f; }
+    .info { color: #0070f3; }
+    code {
+      background: #f1f1f1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: Menlo, Monaco, 'Courier New', monospace;
+    }
+    button {
+      background: #0070f3;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover { background: #005cc5; }
+    .links {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    a {
+      color: #0070f3;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    .status {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    .status div {
+      flex: 1;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 0 5px;
+    }
+    .status-ok { background: #e8f5e9; color: #2e7d32; }
+    .status-error { background: #ffebee; color: #c62828; }
+    .status-pending { background: #fff8e1; color: #f57c00; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Next.js Emergency Page</h1>
+    <p>This static HTML page is served outside of Next.js to help diagnose routing issues.</p>
+    
+    <div class="card">
+      <h2>Current Status</h2>
+      <p class="error">404 Not Found Error Detected</p>
+      <p>The Next.js application is not properly serving requests at the root URL.</p>
+    </div>
+    
+    <div class="card">
+      <h2>Troubleshooting Steps</h2>
+      <ol>
+        <li>Verify that the Next.js development server is running with <code>npm run dev</code></li>
+        <li>Make sure port 3000 is not being used by another application</li>
+        <li>Check for errors in the terminal where Next.js is running</li>
+        <li>Try accessing a specific page like <a href="/page-simple">/page-simple</a></li>
+        <li>Consider running <code>node server.js</code> to start the diagnostic proxy server</li>
+      </ol>
+    </div>
+    
+    <div class="card">
+      <h2>Immediate Fix Options</h2>
+      <p>You can try these immediate solutions:</p>
+      <ul>
+        <li>Delete the <code>.next</code> folder and restart the server</li>
+        <li>Kill any running Next.js processes and restart</li>
+        <li>Check your network settings (especially if using WSL)</li>
+        <li>Try accessing via <code>127.0.0.1:3000</code> instead of <code>localhost:3000</code></li>
+      </ul>
+      <div class="links">
+        <a href="http://127.0.0.1:3000" target="_blank">Try 127.0.0.1:3000</a>
+        <a href="http://localhost:3000/api/health" target="_blank">Check API Health</a>
+      </div>
+    </div>
+    
+    <div class="status">
+      <div class="status-error">
+        <h3>Next.js Server</h3>
+        <p>Not accessible</p>
+      </div>
+      <div class="status-pending">
+        <h3>HTML Fallback</h3>
+        <p>Working (you're seeing this)</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check if we can reach the Next.js server
+    fetch('/api/health')
+      .then(response => {
+        if (response.ok) {
+          document.querySelector('.status-error').className = 'status-ok';
+          document.querySelector('.status-error h3').textContent = 'Next.js Server';
+          document.querySelector('.status-error p').textContent = 'Connected';
+        }
+      })
+      .catch(err => {
+        console.error('Error connecting to Next.js server:', err);
+      });
+  </script>
+</body>
+</html>

@@ -9,7 +9,10 @@ import {
   Calendar, 
   ListFilter,
   GridIcon,
-  Clock
+  Clock,
+  LayoutGrid,
+  List,
+  Table as TableIcon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -21,6 +24,11 @@ import { TaskFormValues } from '@/lib/validations/task';
 import { useTasksRealtime } from '@/hooks/api/useTasksRealtime';
 import { Task } from '@/types/database';
 import { toast } from '@/components/ui/use-toast';
+import { useAppStore } from '@/lib/store/app-store';
+import { ViewSelector } from '@/components/tasks/view-selector';
+import { KanbanView } from '@/components/tasks/kanban-view';
+import { ListView } from '@/components/tasks/list-view';
+import { TableView } from '@/components/tasks/table-view';
 
 // We'll need this component to extend the task card functionality
 const TaskItem = ({ 
@@ -126,13 +134,13 @@ const TaskItem = ({
 // The main Tasks Page component
 export default function TasksPage() {
   const searchParams = useSearchParams();
-  const createParam = searchParams.get('create');
-  const filterParam = searchParams.get('filter');
+  const createParam = searchParams?.get('create') || null;
+  const filterParam = searchParams?.get('filter') || null;
   const { user } = useAuth();
+  const { viewMode } = useAppStore();
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   
@@ -143,7 +151,8 @@ export default function TasksPage() {
       ? filterParam 
       : undefined,
     tags: [],
-    overdue: filterParam === 'overdue'
+    overdue: filterParam === 'overdue',
+    status: filterParam === 'todo' || filterParam === 'in-progress' ? filterParam : undefined
   });
 
   // Initialize creating state from URL if present
@@ -184,17 +193,30 @@ export default function TasksPage() {
     tags: filters.tags.length > 0 ? filters.tags : undefined,
   });
 
-  // Filter for overdue tasks if needed
-  const filteredTasks = filters.overdue
-    ? tasks.filter(task => {
-        if (task.completed) return false;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const dueDate = new Date(task.due_date);
-        dueDate.setHours(0, 0, 0, 0);
-        return dueDate < today;
-      })
-    : tasks;
+  // Filter tasks by multiple criteria
+  const filteredTasks = tasks.filter(task => {
+    // Filter by overdue status
+    if (filters.overdue) {
+      if (task.completed) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dueDate = new Date(task.due_date);
+      dueDate.setHours(0, 0, 0, 0);
+      return dueDate < today;
+    }
+    
+    // Filter by completion status - only apply if overdue filter is not active
+    if (!filters.overdue && filters.completed !== undefined) {
+      if (task.completed !== filters.completed) return false;
+    }
+    
+    // Filter by status
+    if (filters.status && task.status !== filters.status) {
+      return false;
+    }
+    
+    return true;
+  });
 
   // Task handlers
   const handleCreate = async (data: TaskFormValues) => {
@@ -219,9 +241,23 @@ export default function TasksPage() {
       
       // Create task with user ID
       const createdTask = await createTask({
-        ...data,
+        name: data.name,
+        description: data.description || null,
+        start_date: data.start_date || null,
+        start_time: data.start_time || null,
+        due_date: data.due_date,
+        due_time: data.due_time || null,
+        priority: data.priority,
+        duration: data.duration || null,
+        chunk_size: data.chunk_size || null,
+        hard_deadline: data.hard_deadline,
+        project_id: data.project_id || null,
+        tags: data.tags || [],
         user_id: user.id,
         completed: false,
+        status: 'todo',
+        scheduled_blocks: [],
+        completed_at: null
       });
       
       console.log('Task created successfully:', createdTask);
@@ -298,7 +334,12 @@ export default function TasksPage() {
 
   const handleToggleComplete = async (taskId: string, completed: boolean) => {
     try {
-      await updateTask(taskId, { completed });
+      // Update status to match completion state
+      const status = completed ? 'completed' : 'todo';
+      await updateTask(taskId, { 
+        completed,
+        status
+      });
       toast({
         title: completed ? "Task completed" : "Task reopened",
       });
@@ -306,6 +347,26 @@ export default function TasksPage() {
       toast({
         variant: "destructive",
         title: "Failed to update task",
+        description: "An error occurred while updating the task"
+      });
+    }
+  };
+  
+  const handleStatusChange = async (taskId: string, newStatus: string) => {
+    try {
+      // If status is completed, also update the completed flag
+      const completed = newStatus === 'completed';
+      await updateTask(taskId, { 
+        status: newStatus as 'todo' | 'in-progress' | 'completed',
+        completed
+      });
+      toast({
+        title: `Task moved to ${newStatus === 'in-progress' ? 'In Progress' : newStatus}`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to update task status",
         description: "An error occurred while updating the task"
       });
     }
@@ -349,24 +410,7 @@ export default function TasksPage() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold">Tasks</h1>
         <div className="flex gap-2 flex-wrap">
-          <div className="flex border rounded-md p-1 bg-white">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="px-2"
-            >
-              <GridIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="px-2"
-            >
-              <ListFilter className="h-4 w-4" />
-            </Button>
-          </div>
+          <ViewSelector />
           
           <Button
             variant="outline"
@@ -400,15 +444,15 @@ export default function TasksPage() {
       </div>
 
       {showFilters && (
-        <div className="mb-6 p-4 bg-white border rounded-lg">
+        <div className="mb-6 p-4 bg-white dark:bg-gray-800 border rounded-lg">
           <h3 className="font-medium mb-3">Filter Tasks</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Completion
               </label>
               <select 
-                className="w-full rounded-md border-gray-300 shadow-sm"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm"
                 value={filters.completed ? "completed" : filters.overdue ? "overdue" : "active"}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -426,11 +470,33 @@ export default function TasksPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Status
+              </label>
+              <select 
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm"
+                value={filters.status || "all"}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  handleFilterChange({
+                    ...filters,
+                    status: value === "all" ? undefined : value,
+                  });
+                }}
+              >
+                <option value="all">All Statuses</option>
+                <option value="todo">To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Priority
               </label>
               <select 
-                className="w-full rounded-md border-gray-300 shadow-sm"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm"
                 value={filters.priority || "all"}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -453,7 +519,8 @@ export default function TasksPage() {
                   completed: false,
                   priority: undefined,
                   tags: [],
-                  overdue: false
+                  overdue: false,
+                  status: undefined
                 });
               }}>
                 Reset Filters
@@ -487,21 +554,88 @@ export default function TasksPage() {
           )}
         </div>
       ) : (
-        <div className={viewMode === 'grid' 
-          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
-          : "space-y-4"
-        }>
-          {filteredTasks.map((task) => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              onEdit={setSelectedTask}
-              onDelete={handleDelete}
-              onToggleComplete={handleToggleComplete}
-              setDialogOpen={setDialogOpen}
+        <>
+          {viewMode === 'kanban' && (
+            <KanbanView 
+              tasks={filteredTasks}
+              onTaskClick={(task) => {
+                setSelectedTask(task);
+                setDialogOpen(true);
+              }}
+              onStatusChange={(taskId, completed, newStatus) => {
+                // Get the task
+                const task = filteredTasks.find(t => t.id === taskId);
+                if (!task) return;
+                
+                // If we have an explicit new status (from kanban drag & drop), use it
+                if (newStatus) {
+                  if (completed) {
+                    // If marking as completed
+                    handleToggleComplete(taskId, completed);
+                  } else {
+                    // Otherwise just update the status
+                    handleStatusChange(taskId, newStatus);
+                  }
+                } else {
+                  // Fallback logic without explicit status
+                  if (completed) {
+                    // If dropping into completed column
+                    handleToggleComplete(taskId, completed);
+                  } else {
+                    // If dropping into todo or in-progress column
+                    const currentStatus = task.status;
+                    
+                    // If currently in completed state, reset to todo
+                    if (task.completed) {
+                      handleStatusChange(taskId, 'todo');
+                    } 
+                    // If currently in todo, move to in-progress (and vice versa)
+                    else if (currentStatus === 'todo') {
+                      handleStatusChange(taskId, 'in-progress');
+                    } else if (currentStatus === 'in-progress') {
+                      handleStatusChange(taskId, 'todo');
+                    }
+                  }
+                }
+              }}
             />
-          ))}
-        </div>
+          )}
+          {viewMode === 'list' && (
+            <ListView 
+              tasks={filteredTasks}
+              onTaskClick={(task) => {
+                setSelectedTask(task);
+                setDialogOpen(true);
+              }}
+              onStatusChange={handleToggleComplete}
+            />
+          )}
+          {viewMode === 'table' && (
+            <TableView 
+              tasks={filteredTasks}
+              onTaskClick={(task) => {
+                setSelectedTask(task);
+                setDialogOpen(true);
+              }}
+              onStatusChange={handleToggleComplete}
+            />
+          )}
+          {/* Legacy view modes for backwards compatibility */}
+          {(viewMode !== 'kanban' && viewMode !== 'list' && viewMode !== 'table') && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onEdit={setSelectedTask}
+                  onDelete={handleDelete}
+                  onToggleComplete={handleToggleComplete}
+                  setDialogOpen={setDialogOpen}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

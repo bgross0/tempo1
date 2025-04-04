@@ -4,6 +4,7 @@ import { useAppStore } from '@/lib/store';
 import { useTasks } from '@/hooks/api/useTasks';
 import { generateScheduleForAll, updateTaskSchedule } from '@/lib/scheduling/scheduler';
 import { toast } from '@/components/ui/use-toast';
+import { ScheduledBlock as DatabaseScheduledBlock } from '@/types/database';
 
 export function useScheduler() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -127,9 +128,10 @@ export function useScheduler() {
   // Reschedule a single task
   const rescheduleTask = useCallback(async (
     taskId: string, 
-    scheduledBlocks: { date: string; startTime: string; endTime: string; taskId: string }[]
+    scheduledBlocks: { date: string; startTime: string; endTime: string; taskId?: string }[]
   ) => {
     try {
+      // The updateTaskSchedule function will handle ensuring taskId is present
       await updateTaskSchedule(taskId, scheduledBlocks, updateTask);
       
       toast({
