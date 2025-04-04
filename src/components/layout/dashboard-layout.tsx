@@ -25,7 +25,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { ThemeToggle } from './ThemeToggle';
-import { useDarkMode } from '@/hooks/useDarkMode';
 import { useAppStore } from '@/lib/store/app-store';
 import { 
   Tooltip, 
@@ -98,16 +97,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     setCommandPaletteOpen 
   } = useAppStore();
   const { signOut, user } = useAuth();
-  const { isDarkMode } = useDarkMode();
   const pathname = usePathname();
   const { handleKeyDown } = useKeyboardShortcuts();
 
-  // Dark mode application temporarily disabled
-  useEffect(() => {
-    console.log("Dark mode changes disabled");
-    // Force light mode for now
-    document.documentElement.classList.remove('dark');
-  }, []);
   
   // Register keyboard shortcuts
   useEffect(() => {
@@ -285,9 +277,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2">
             <KeyboardShortcutsDialog />
             <ThemeToggle />
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-            </Button>
           </div>
         </header>
 

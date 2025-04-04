@@ -1,21 +1,13 @@
 'use client';
 
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useDarkMode } from '@/hooks/useDarkMode';
 
 export function ThemeToggle() {
-  // Temporarily disabled theme toggle
+  // Simple button replacing the theme toggle but keeping same look
   return (
-    <Button variant="ghost" size="icon">
-      <Sun className="h-5 w-5" />
-      <span className="sr-only">Theme (disabled)</span>
+    <Button variant="ghost" size="icon" aria-label="User settings">
+      <User className="h-5 w-5" />
     </Button>
   );
 }

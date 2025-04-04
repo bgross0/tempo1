@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { useAppStore } from '@/lib/store';
+import { useAppStore } from '@/lib/store/app-store';
 
 // Create a context provider for the app store
 export function AppStoreProvider({ children }: { children: ReactNode }) {

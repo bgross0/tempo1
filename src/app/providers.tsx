@@ -13,13 +13,10 @@ export function Providers({ children }: { children: ReactNode }) {
     setMounted(true);
   }, []);
 
-  // Root provider - intentionally NOT setting dark mode class here
-  // Let the useDarkMode hook handle the dark mode class to avoid conflicts
+  // Set mounted state
   useEffect(() => {
-    if (mounted) {
-      console.log("Root providers mounted - dark mode will be handled by useDarkMode hook");
-    }
-  }, [mounted]);
+    setMounted(true);
+  }, []);
 
   // Always render children to avoid hydration issues
   return (
