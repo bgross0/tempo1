@@ -26,9 +26,6 @@ export const supabase = createClient<Database>(
   }
 );
 
-// Singleton pattern for authenticated client to avoid multiple instances
-let authenticatedClient: ReturnType<typeof createClient<Database>> | null = null;
-
 // Create an authenticated Supabase client using the official pattern
 export const getAuthenticatedClient = async () => {
   try {
@@ -45,30 +42,9 @@ export const getAuthenticatedClient = async () => {
       throw new Error('Authentication required');
     }
     
-    // Return existing client if we already have one - prevents multiple instances
-    if (authenticatedClient) {
-      return authenticatedClient;
-    }
-    
-    // Create a new client with the session token included in headers
-    authenticatedClient = createClient<Database>(
-      supabaseUrl || '',
-      supabaseAnonKey || '',
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
-        },
-        auth: {
-          // Use same auth settings as main client for consistency
-          autoRefreshToken: true,
-          persistSession: true
-        }
-      }
-    );
-    
-    return authenticatedClient;
+    // Just return the standard client - the Supabase JS library automatically 
+    // attaches the auth token to all requests when a session exists
+    return supabase;
   } catch (error) {
     console.error('Failed to get authenticated client:', error);
     throw error;

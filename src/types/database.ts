@@ -16,11 +16,11 @@ export interface Task {
   chunk_size: number | null; // minutes
   hard_deadline: boolean;
   completed: boolean;
-  completed_at: string | null; // ISO datetime
+  // completed_at field removed - doesn't exist in actual DB schema
+  // scheduled_blocks field removed - doesn't exist in actual DB schema
   tags: string[];
   created_at: string; // ISO datetime
   updated_at: string; // ISO datetime
-  scheduled_blocks: Json | null; // Match with Supabase schema (JSONB field)
   status: 'todo' | 'in-progress' | 'completed'; // Task status for kanban view
 }
 

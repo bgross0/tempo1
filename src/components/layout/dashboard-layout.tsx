@@ -198,7 +198,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 alt="Tempo Logo" 
                 width={200}
                 height={200}
-                className="h-16 w-auto" 
+                className="h-32 w-48" 
               />
             </Link>
             <div className="flex items-center">

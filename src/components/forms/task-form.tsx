@@ -63,6 +63,11 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
   const handleSubmit = async (data: TaskFormValues) => {
     try {
       setIsSubmitting(true);
+      console.log('Submitting task data:', data);
+      // Add debug info for time fields
+      console.log('Type of start_date:', typeof data.start_date, 'Value:', data.start_date);
+      console.log('Type of start_time:', typeof data.start_time, 'Value:', data.start_time);
+      console.log('Type of due_time:', typeof data.due_time, 'Value:', data.due_time);
       await onSubmit(data);
     } catch (error) {
       console.error('Error submitting task:', error);
@@ -73,7 +78,7 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 md:space-y-6">
         <FormField
           control={form.control}
           name="name"
@@ -131,7 +136,13 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
                   <Input
                     type="time"
                     {...field}
-                    value={field.value || ''}
+                    value={field.value ? field.value.substring(0, 5) : ''}
+                    onChange={(e) => {
+                      // Ensure proper format for PostgreSQL TIME fields
+                      const timeValue = e.target.value ? e.target.value : null;
+                      console.log('Time input changed:', timeValue);
+                      field.onChange(timeValue);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -169,7 +180,12 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
                   <Input
                     type="time"
                     {...field}
-                    value={field.value || ''}
+                    value={field.value ? field.value.substring(0, 5) : ''}
+                    onChange={(e) => {
+                      // Ensure proper format for PostgreSQL TIME fields
+                      const timeValue = e.target.value ? e.target.value : null;
+                      field.onChange(timeValue);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -267,7 +283,7 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
                   />
                 </FormControl>
                 <FormDescription>
-                  Estimated time to complete this task (required for scheduling)
+                  Est. time needed (min)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -292,7 +308,7 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
                   />
                 </FormControl>
                 <FormDescription>
-                  Break this task into chunks of this size
+                  Break task into smaller time blocks
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -304,7 +320,7 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
           control={form.control}
           name="hard_deadline"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
               <FormControl>
                 <Checkbox
                   checked={field.value}
@@ -314,7 +330,7 @@ export function TaskForm({ initialData, onSubmit, onCancel }: TaskFormProps) {
               <div className="space-y-1 leading-none">
                 <FormLabel>Hard Deadline</FormLabel>
                 <FormDescription>
-                  This task must be completed by the due date and time
+                  Must be completed by due date
                 </FormDescription>
               </div>
             </FormItem>

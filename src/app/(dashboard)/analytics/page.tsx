@@ -27,13 +27,13 @@ export default function AnalyticsPage() {
   // Calculate analytics metrics
   const completedTasksCount = tasks.filter(task => 
     task.completed && 
-    new Date(task.completed_at as string) >= (period === 'week' ? weekStart : monthStart)
+    new Date(task.updated_at) >= (period === 'week' ? weekStart : monthStart)
   ).length;
   
   const totalTimeSpent = tasks
     .filter(task => 
       task.completed && 
-      new Date(task.completed_at as string) >= (period === 'week' ? weekStart : monthStart)
+      new Date(task.updated_at) >= (period === 'week' ? weekStart : monthStart)
     )
     .reduce((total, task) => total + (task.duration || 0), 0);
   
@@ -139,13 +139,13 @@ export default function AnalyticsPage() {
           <TimeAllocationChart 
             tasks={tasks} 
             projects={projects} 
-            period={period} 
+            days={period === 'week' ? 7 : 30} 
           />
         </div>
         <div className="lg:col-span-1">
           <ProductivityInsights 
             tasks={tasks} 
-            period={period} 
+            days={period === 'week' ? 7 : 30} 
           />
         </div>
       </div>

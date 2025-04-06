@@ -9,7 +9,7 @@
 - Unit tests only: `npm run test:unit`
 - Integration tests only: `npm run test:integration`
 - Test coverage: `npm run test:coverage`
-- Single test: `npx jest path/to/test-file.test.ts`
+- Single test: `npx vitest path/to/test-file.test.ts`
 - E2E tests: `npx cypress run` or single test: `npx cypress run --spec "cypress/e2e/fileName.spec.cy.ts"`
 - Interactive E2E: `npx cypress open`
 
@@ -34,29 +34,9 @@
 - Place tests in `__tests__` directories adjacent to the components they test
 - Suffix test files with `.test.tsx` for unit tests and `.integration.test.tsx` for integration tests
 
-### Unit Test Coverage
-We have unit tests for the following component types:
+### Testing with Vitest
 
-1. UI Components:
-   - Button
-   - Checkbox
-   - Input
-   - Badge
-   - Progress
-   - Dialog
-   - DropdownMenu
-
-2. Feature Components:
-   - ThemeToggle
-   - TaskCard
-   - TaskForm
-   - MiniCalendar
-
-3. Data Visualization:
-   - ProductivityScore
-   - PriorityDistributionChart
-
-### Component Testing Patterns
+#### Component Testing Patterns
 1. Simple UI Components:
    - Test rendering and basic interactions
    - Verify proper classes and attributes are applied
@@ -72,8 +52,8 @@ We have unit tests for the following component types:
    - Test loading, success, and error states
    - Verify correct data display
 
-### Jest Mocking
-- Mock external dependencies with `jest.mock()`
+### Vitest Mocking
+- Mock external dependencies with `vi.mock()`
 - For complex hooks, use explicit mock implementations
 - Prefer component isolation by mocking child components when needed
 

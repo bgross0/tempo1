@@ -38,8 +38,7 @@ export function TaskCard({ task, compact = false }: TaskCardProps) {
     try {
       setIsUpdating(true);
       await updateTask(task.id, { 
-        completed: !task.completed,
-        completed_at: !task.completed ? new Date().toISOString() : null
+        completed: !task.completed
       });
     } catch (error) {
       console.error('Error updating task:', error);

@@ -43,8 +43,7 @@ export function DashboardStats({ tasks, projects }: DashboardStatsProps) {
     // Recently completed tasks (last 7 days)
     const recentlyCompletedTasks = tasks.filter(task => 
       task.completed && 
-      task.completed_at && 
-      differenceInDays(now, new Date(task.completed_at)) <= 7
+      differenceInDays(now, new Date(task.updated_at)) <= 7
     );
     
     // Active projects
@@ -53,7 +52,7 @@ export function DashboardStats({ tasks, projects }: DashboardStatsProps) {
     // Completion rate for this week
     const thisWeekTasks = tasks.filter(task => 
       isThisWeek(new Date(task.due_date)) || 
-      (task.completed && task.completed_at && isThisWeek(new Date(task.completed_at)))
+      (task.completed && isThisWeek(new Date(task.updated_at)))
     );
     
     const completionRate = thisWeekTasks.length > 0

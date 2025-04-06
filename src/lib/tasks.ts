@@ -28,7 +28,6 @@ export async function getTasks(userId: string) {
     tags: task.tags,
     completed: task.completed,
     status: task.status || 'todo',
-    scheduledBlocks: task.scheduled_blocks,
     createdAt: task.created_at,
     updatedAt: task.updated_at
   })) as Task[];
@@ -52,8 +51,7 @@ export async function createTask(task: Omit<Task, 'id' | 'createdAt' | 'updatedA
       hard_deadline: task.hardDeadline,
       tags: task.tags,
       completed: task.completed,
-      status: task.status || 'todo',
-      scheduled_blocks: task.scheduledBlocks
+      status: task.status || 'todo'
     })
     .select()
     .single();
@@ -80,7 +78,6 @@ export async function updateTask(task: Task) {
       tags: task.tags,
       completed: task.completed,
       status: task.status,
-      scheduled_blocks: task.scheduledBlocks,
       updated_at: new Date().toISOString()
     })
     .eq('id', task.id)

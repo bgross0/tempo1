@@ -1,142 +1,187 @@
-// src/components/calendar/WeekView.tsx
-import { useState, useEffect } from 'react';
-import { format, addDays, startOfWeek } from 'date-fns';
+'use client';
+
 import { useAppStore } from '@/lib/store';
 import TaskCard from '@/components/dashboard/TaskCard';
-import { Task as StoreTask, Event as StoreEvent } from '@/types';
+import { Task as StoreTask, Event as StoreEvent } from '@/lib/store/app-store';
 import { Task as DatabaseTask, Event as DatabaseEvent } from '@/types/database';
 import EventCard from '@/components/events/EventCard';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useCallback, useMemo } from 'react';
+import { format, addDays, startOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 
 interface WeekViewProps {
-  date: Date;
+  currentDate: Date;
+  tasks: (StoreTask | DatabaseTask)[];
+  events: (StoreEvent | DatabaseEvent)[];
+  onTaskClick?: (task: DatabaseTask) => void;
+  onEventClick?: (event: DatabaseEvent) => void;
 }
 
-export default function WeekView({ date }: WeekViewProps) {
-  const { tasks, events } = useAppStore();
-  const [weekDates, setWeekDates] = useState<Date[]>([]);
-  
-  useEffect(() => {
-    // Get the dates for the current week (Monday to Sunday)
-    const start = startOfWeek(date, { weekStartsOn: 1 });
-    const dates = Array.from({ length: 7 }, (_, i) => addDays(start, i));
-    setWeekDates(dates);
-  }, [date]);
-  
-  // Working hours
-  const workingHours = Array.from({ length: 9 }, (_, i) => i + 9); // 9 AM to 5 PM
-  
+export function WeekView({ 
+  currentDate,
+  tasks,
+  events,
+  onTaskClick,
+  onEventClick
+}: WeekViewProps) {
+  // Generate days of the week
+  const days = useMemo(() => {
+    return eachDayOfInterval({
+      start: startOfWeek(currentDate, { weekStartsOn: 0 }), // 0 = Sunday
+      end: addDays(startOfWeek(currentDate, { weekStartsOn: 0 }), 6)
+    });
+  }, [currentDate]);
+
+  // Format day (e.g., "Mon 15")
+  const formatDay = useCallback((day: Date) => {
+    return format(day, 'EEE d');
+  }, []);
+
+  // Check if a day is today
+  const isToday = useCallback((day: Date) => {
+    return isSameDay(day, new Date());
+  }, []);
+
+  // Function to normalize task data format
+  const normalizeTask = (task: StoreTask | DatabaseTask): DatabaseTask => {
+    // If it's already a database task, return it
+    if ('due_date' in task) return task as DatabaseTask;
+    
+    // Convert from store format to database format
+    return {
+      id: task.id,
+      user_id: task.userId || '',
+      name: task.name,
+      description: task.description || null,
+      due_date: task.dueDate,
+      due_time: task.dueTime || null,
+      start_date: task.startDate || null,
+      start_time: task.startTime || null,
+      priority: task.priority,
+      project_id: task.projectId || null,
+      duration: task.duration || null,
+      chunk_size: task.chunkSize || null,
+      hard_deadline: task.hardDeadline || false,
+      completed: task.completed || false,
+      tags: task.tags || [],
+      created_at: task.createdAt,
+      updated_at: task.createdAt,
+      status: task.status
+    };
+  };
+
+  // Function to normalize event data format
+  const normalizeEvent = (event: StoreEvent | DatabaseEvent): DatabaseEvent => {
+    // If it's already a database event, return it
+    if ('start_date' in event) return event as DatabaseEvent;
+    
+    // Convert from store format to database format
+    return {
+      id: event.id,
+      user_id: '',
+      name: event.name,
+      description: event.description || null,
+      start_date: event.startDate,
+      start_time: event.startTime,
+      end_date: event.endDate,
+      end_time: event.endTime,
+      location: event.location || null,
+      recurring: event.recurring || 'none',
+      tags: event.tags || [],
+      created_at: event.createdAt,
+      updated_at: event.createdAt
+    };
+  };
+
+  // Get items for a specific day
+  const getItemsForDay = useCallback((day: Date) => {
+    const dayStr = format(day, 'yyyy-MM-dd');
+    
+    const tasksForDay = tasks.filter(task => {
+      // If it has a start date, use that, otherwise use due date
+      const taskDate = task.start_date || task.startDate || task.due_date || task.dueDate;
+      return format(new Date(taskDate), 'yyyy-MM-dd') === dayStr;
+    });
+    
+    const eventsForDay = events.filter(event => {
+      const eventStartDate = event.start_date || event.startDate;
+      const eventEndDate = event.end_date || event.endDate;
+      
+      // If event is on a single day
+      if (eventStartDate === eventEndDate) {
+        return format(new Date(eventStartDate), 'yyyy-MM-dd') === dayStr;
+      }
+      
+      // For multi-day events, check if day is within range
+      const startDate = new Date(eventStartDate);
+      const endDate = new Date(eventEndDate);
+      const dayObj = new Date(dayStr);
+      
+      return dayObj >= startDate && dayObj <= endDate;
+    });
+    
+    return { tasks: tasksForDay, events: eventsForDay };
+  }, [tasks, events]);
+
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="grid grid-cols-8 border-b">
-        {/* Time column header */}
-        <div className="p-2 text-center text-gray-500 text-sm font-medium border-r">Time</div>
-        
-        {/* Day headers */}
-        {weekDates.map((day, index) => (
-          <div
-            key={index}
-            className={`p-2 text-center font-medium ${
-              day.toDateString() === new Date().toDateString() ? 'bg-primary-light text-primary' : ''
+    <div className="h-full flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <header className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-medium">
+          {format(days[0], 'MMMM d')} - {format(days[6], 'MMMM d, yyyy')}
+        </h2>
+      </header>
+      
+      <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
+        {days.map((day) => (
+          <div 
+            key={day.toString()} 
+            className={`p-2 text-center text-sm font-medium ${
+              isToday(day) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-100' : ''
             }`}
           >
-            <div>{format(day, 'EEE')}</div>
-            <div>{format(day, 'd MMM')}</div>
+            {formatDay(day)}
           </div>
         ))}
       </div>
       
-      {/* Time slots */}
-      <div className="relative">
-        {workingHours.map((hour) => (
-          <div key={hour} className="grid grid-cols-8 border-b">
-            {/* Time label */}
-            <div className="p-2 text-center text-gray-500 text-sm border-r">
-              {hour}:00
-            </div>
+      <ScrollArea className="flex-grow">
+        <div className="grid grid-cols-7 divide-x divide-gray-200 dark:divide-gray-700 h-full">
+          {days.map((day) => {
+            const { tasks: dayTasks, events: dayEvents } = getItemsForDay(day);
             
-            {/* Hour slots for each day */}
-            {weekDates.map((day, dayIndex) => {
-              const dateString = format(day, 'yyyy-MM-dd');
-              
-              // Find tasks scheduled for this hour on this day
-              const scheduledTasks = tasks.filter(task => {
-                if (!task.scheduledBlocks) return false;
-                
-                return task.scheduledBlocks.some(block => {
-                  if (block.date !== dateString) return false;
+            return (
+              <div 
+                key={day.toString()} 
+                className={`p-1 min-h-[300px] ${
+                  isToday(day) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                }`}
+              >
+                <div className="space-y-1">
+                  {dayTasks.map((task) => (
+                    <div 
+                      key={task.id} 
+                      className="cursor-pointer"
+                      onClick={() => onTaskClick?.(normalizeTask(task))}
+                    >
+                      <TaskCard task={normalizeTask(task)} compact={true} />
+                    </div>
+                  ))}
                   
-                  const [blockHour] = block.startTime.split(':').map(Number);
-                  return blockHour === hour;
-                });
-              });
-              
-              // Find events scheduled for this hour on this day
-              const scheduledEvents = events.filter(event => {
-                if (event.startDate !== dateString) return false;
-                
-                const [eventHour] = event.startTime.split(':').map(Number);
-                return eventHour === hour;
-              });
-              
-              return (
-                <div 
-                  key={dayIndex} 
-                  className="p-1 min-h-[60px] border-r relative"
-                  data-date={dateString}
-                  data-hour={hour}
-                >
-                  {scheduledTasks.map(task => {
-                    // Convert from store task type to database task type
-                    const dbTask: DatabaseTask = {
-                      id: task.id,
-                      user_id: "",
-                      project_id: task.projectId,
-                      name: task.name,
-                      description: task.description || null,
-                      start_date: task.startDate,
-                      start_time: task.startTime,
-                      due_date: task.dueDate,
-                      due_time: task.dueTime,
-                      priority: task.priority,
-                      duration: task.duration,
-                      chunk_size: task.chunkSize,
-                      hard_deadline: task.hardDeadline,
-                      completed: task.completed,
-                      completed_at: null,
-                      tags: task.tags,
-                      created_at: task.createdAt,
-                      updated_at: task.createdAt,
-                      scheduled_blocks: task.scheduledBlocks as any,
-                      status: task.status
-                    };
-                    return <TaskCard key={task.id} task={dbTask} />;
-                  })}
-                  
-                  {scheduledEvents.map(event => {
-                    // Convert from store event type to database event type
-                    const dbEvent: DatabaseEvent = {
-                      id: event.id,
-                      user_id: "",
-                      name: event.name,
-                      description: event.description || null,
-                      start_date: event.startDate,
-                      start_time: event.startTime,
-                      end_date: event.endDate,
-                      end_time: event.endTime,
-                      location: event.location || null,
-                      recurring: event.recurring,
-                      tags: event.tags,
-                      created_at: event.createdAt,
-                      updated_at: event.createdAt
-                    };
-                    return <EventCard key={event.id} event={dbEvent} />;
-                  })}
+                  {dayEvents.map((event) => (
+                    <div 
+                      key={event.id} 
+                      className="cursor-pointer"
+                      onClick={() => onEventClick?.(normalizeEvent(event))}
+                    >
+                      <EventCard event={normalizeEvent(event)} />
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
     </div>
   );
 }

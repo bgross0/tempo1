@@ -17,7 +17,11 @@ export function ProjectList() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    completed: boolean;
+    priority: 'high' | 'medium' | 'low' | undefined;
+    tags: string[];
+  }>({
     completed: false,
     priority: undefined,
     tags: [],
@@ -26,11 +30,9 @@ export function ProjectList() {
   const {
     projects,
     isLoading,
-    isError,
     createProject,
     updateProject,
     deleteProject,
-    mutate,
   } = useProjects({
     completed: filters.completed,
     priority: filters.priority as 'high' | 'medium' | 'low' | undefined,
@@ -54,9 +56,10 @@ export function ProjectList() {
     // In a real app, you'd get the user_id from auth context
     await createProject({
       ...data,
-      user_id: 'temp-user-id', // Replace with real user ID in production
+      user_id: 'user_id', // Replace with real user ID in production
       completed: false,
-      completed_at: null, // Add the missing completed_at property
+      completed_at: null,
+      description: data.description ?? null, // Add the missing completed_at property
     });
     setIsCreating(false);
   };
@@ -98,10 +101,11 @@ export function ProjectList() {
     return <div className="text-center py-8">Loading projects...</div>;
   }
 
+  const isError = !projects && !isLoading;
+
   if (isError) {
     return <div className="text-center py-8 text-red-500">Error loading projects</div>;
   }
-
   if (isCreating) {
     return (
       <div className="max-w-2xl mx-auto p-4">

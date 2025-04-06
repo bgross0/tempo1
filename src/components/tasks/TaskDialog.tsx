@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, PaperclipIcon, MessageSquare } from 'lucide-react';
+import { PaperclipIcon, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Dialog, 
@@ -116,26 +116,29 @@ export default function TaskDialog({
         // Create new task with properly formatted data
         console.log('Creating new task for user ID:', user.id);
         
-        // Prepare task data, ensuring the user_id is included and all required fields have appropriate types
+        // Build an object with only fields that exist in the database schema
         const taskData = {
           user_id: user.id,
           name: data.name,
-          description: data.description || null,
-          start_date: data.start_date || null,
-          start_time: data.start_time || null,
+          description: data.description,
+          start_date: data.start_date,
+          start_time: null, // Will set conditionally below
           due_date: data.due_date,
-          due_time: data.due_time || null,
+          due_time: null, // Will set conditionally below
           priority: data.priority,
-          duration: data.duration || 30, // Default to 30 minutes as duration is required in the database
-          chunk_size: data.chunk_size || null,
+          duration: data.duration || 30,
+          chunk_size: data.chunk_size,
           hard_deadline: data.hard_deadline || false,
-          tags: data.tags || [],
+          tags: Array.isArray(data.tags) ? data.tags : [],
           completed: false,
-          completed_at: null,
-          scheduled_blocks: null,
+          // Note: completed_at and scheduled_blocks don't exist in the database
           status: data.status || 'todo',
-          project_id: data.project_id || null
+          project_id: data.project_id
         };
+        
+        // Set time values if they exist (these will be properly formatted by Zod schema)
+        if (data.start_time) taskData.start_time = data.start_time;
+        if (data.due_time) taskData.due_time = data.due_time;
         
         console.log('Sending task creation request with data:', JSON.stringify(taskData, null, 2));
         const createdTask = await createTask(taskData);
@@ -179,20 +182,13 @@ export default function TaskDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="max-w-md md:max-w-2xl">
+      <DialogContent className="max-w-md md:max-w-xl lg:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{task ? 'Edit Task' : 'Create Task'}</DialogTitle>
           <DialogDescription>
             {task ? 'Update your task details below' : 'Enter details for your new task'}
           </DialogDescription>
-          <Button
-            onClick={() => setIsOpen(false)}
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {/* No manual close button needed - Dialog component handles this */}
         </DialogHeader>
         
         <Tabs defaultValue="details" className="w-full">

@@ -255,9 +255,7 @@ export default function TasksPage() {
         tags: data.tags || [],
         user_id: user.id,
         completed: false,
-        status: 'todo',
-        scheduled_blocks: [],
-        completed_at: null
+        status: 'todo'
       });
       
       console.log('Task created successfully:', createdTask);

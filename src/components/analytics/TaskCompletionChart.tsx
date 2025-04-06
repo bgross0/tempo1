@@ -91,9 +91,10 @@ function generateChartData(tasks: Task[], days: number) {
     const dateStr = format(date, 'yyyy-MM-dd');
     
     // Count completed tasks for this date
+    // Since we don't have completed_at, use updated_at to estimate completion date
     const completedCount = tasks.filter(task => {
-      if (!task.completed || !task.completed_at) return false;
-      return format(new Date(task.completed_at), 'yyyy-MM-dd') === dateStr;
+      if (!task.completed) return false;
+      return format(new Date(task.updated_at), 'yyyy-MM-dd') === dateStr;
     }).length;
     
     return {

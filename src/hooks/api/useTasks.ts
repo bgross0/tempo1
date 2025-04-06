@@ -119,38 +119,60 @@ export function useTasks(filters: TaskFilters = {}) {
         const authedClient = await getAuthenticatedClient();
         console.log('Successfully created authenticated client for task creation');
         
-        // Create a task object with proper type handling
-        const taskData = {
-          user_id: String(newTask.user_id),
-          name: String(newTask.name).trim(),
+        // Create base task data object with required fields
+        const taskDataForInsert: Record<string, any> = {
+          user_id: newTask.user_id,
+          name: newTask.name,
           description: newTask.description,
-          due_date: String(newTask.due_date),
-          due_time: newTask.due_time,
-          start_date: newTask.start_date,
-          // Convert null to undefined for time fields to avoid type errors
-          start_time: newTask.start_time || undefined,
-          priority: (newTask.priority === 'high' || newTask.priority === 'medium' || newTask.priority === 'low') 
-            ? newTask.priority 
-            : 'medium',
+          due_date: newTask.due_date,
+          priority: newTask.priority || 'medium',
           status: newTask.status || 'todo',
-          duration: newTask.duration || 30, // Duration is required in the database
-          chunk_size: newTask.chunk_size,
+          duration: newTask.duration || 30,
           hard_deadline: Boolean(newTask.hard_deadline),
           completed: Boolean(newTask.completed),
           tags: Array.isArray(newTask.tags) ? newTask.tags : []
         };
         
-        console.log('Sending task data to Supabase:', JSON.stringify(taskData, null, 2));
+        // CRITICAL FIX: Only include optional fields if they have non-null values
+        // This prevents PostgreSQL type errors with null values
+        if (newTask.project_id) {
+          taskDataForInsert.project_id = newTask.project_id;
+        }
+        
+        if (newTask.start_date) {
+          taskDataForInsert.start_date = newTask.start_date;
+        }
+        
+        if (newTask.chunk_size) {
+          taskDataForInsert.chunk_size = newTask.chunk_size;
+        }
+        
+        // Handle time fields with proper PostgreSQL TIME formatting
+        if (newTask.due_time) {
+          // Ensure time has seconds for PostgreSQL TIME type
+          taskDataForInsert.due_time = newTask.due_time.includes(':00') 
+            ? newTask.due_time 
+            : `${newTask.due_time}:00`;
+        }
+        
+        if (newTask.start_time) {
+          // Ensure time has seconds for PostgreSQL TIME type
+          taskDataForInsert.start_time = newTask.start_time.includes(':00') 
+            ? newTask.start_time 
+            : `${newTask.start_time}:00`;
+        }
+        
+        console.log('Final task data for insert:', JSON.stringify(taskDataForInsert, null, 2));
         
         // Use the authenticated client for task creation
         const { data, error } = await authedClient
           .from('tasks')
-          .insert(taskData)
+          .insert(taskDataForInsert)
           .select();
         
         if (error) {
           console.error('Error creating task:', error);
-          throw error;
+          throw new Error(`Task creation failed: ${error.message || error.details || JSON.stringify(error)}`);
         }
         
         if (!data || data.length === 0) {
@@ -178,6 +200,31 @@ export function useTasks(filters: TaskFilters = {}) {
       try {
         console.log('Updating task:', id, 'with data:', updates);
         
+        // Create a clean updates object omitting null values
+        const formattedUpdates: Record<string, any> = {};
+        
+        // Only include fields that are defined and non-null
+        Object.entries(updates).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            formattedUpdates[key] = value;
+          }
+        });
+        
+        // Format time fields properly for PostgreSQL TIME type if they exist
+        if (updates.start_time) {
+          formattedUpdates.start_time = updates.start_time.includes(':00') 
+            ? updates.start_time 
+            : `${updates.start_time}:00`;
+        }
+        
+        if (updates.due_time) {
+          formattedUpdates.due_time = updates.due_time.includes(':00') 
+            ? updates.due_time 
+            : `${updates.due_time}:00`;
+        }
+        
+        console.log('Final update data:', JSON.stringify(formattedUpdates, null, 2));
+        
         // Import the getAuthenticatedClient function
         const { getAuthenticatedClient } = await import('@/lib/supabase');
         
@@ -189,7 +236,7 @@ export function useTasks(filters: TaskFilters = {}) {
         // Update the task using the authenticated client
         const { data, error } = await authedClient
           .from('tasks')
-          .update(updates)
+          .update(formattedUpdates)
           .eq('id', id)
           .select();
         

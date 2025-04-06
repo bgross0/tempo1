@@ -1,160 +1,193 @@
-import React from 'react';
-import { format, addHours, startOfDay } from 'date-fns';
+'use client';
+
 import { useAppStore } from '@/lib/store';
 import TaskCard from '@/components/dashboard/TaskCard';
-import { Task as StoreTask } from '@/types';
+import { Task as StoreTask } from '@/lib/store/app-store';
 import { Task as DatabaseTask } from '@/types/database';
 import EventCard from '@/components/events/EventCard';
+import { Event as StoreEvent } from '@/lib/store/app-store';
 import { Event as DatabaseEvent } from '@/types/database';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useCallback, useMemo } from 'react';
+import { format, addHours, startOfDay, eachHourOfInterval } from 'date-fns';
 
 interface DayViewProps {
-  date: Date;
+  currentDate: Date;
+  tasks: (StoreTask | DatabaseTask)[];
+  events: (StoreEvent | DatabaseEvent)[];
+  onTaskClick?: (task: DatabaseTask) => void;
+  onEventClick?: (event: DatabaseEvent) => void;
 }
 
-export default function DayView({ date }: DayViewProps) {
-  const { tasks, events } = useAppStore();
-  
-  // Working hours
-  const workingHours = Array.from({ length: 15 }, (_, i) => i + 7); // 7 AM to 9 PM
-  
-  const dateString = format(date, 'yyyy-MM-dd');
-  
-  // Filter tasks for this day
-  const dayTasks = tasks.filter(task => {
-    if (!task.scheduledBlocks) return false;
-    return task.scheduledBlocks.some(block => block.date === dateString);
-  });
-  
-  // Filter events for this day
-  const dayEvents = events.filter(event => {
-    return event.startDate <= dateString && event.endDate >= dateString;
-  });
-  
-  // Find tasks and events for a specific hour
-  const getItemsForHour = (hour: number) => {
-    const scheduledTasks = dayTasks.filter(task => {
-      return task.scheduledBlocks.some(block => {
-        if (block.date !== dateString) return false;
-        
-        const [blockHour] = block.startTime.split(':').map(Number);
-        return blockHour === hour;
-      });
+export function DayView({ 
+  currentDate,
+  tasks,
+  events,
+  onTaskClick,
+  onEventClick
+}: DayViewProps) {
+  // Generate hours of the day
+  const hours = useMemo(() => {
+    return eachHourOfInterval({
+      start: startOfDay(currentDate),
+      end: addHours(startOfDay(currentDate), 23)
     });
+  }, [currentDate]);
+
+  // Format time (e.g., "9:00 AM")
+  const formatTime = useCallback((hour: Date) => {
+    return format(hour, 'h:mm a');
+  }, []);
+
+  // Filter tasks and events for the current day
+  const tasksForDay = useMemo(() => {
+    const currentDateStr = format(currentDate, 'yyyy-MM-dd');
     
-    const scheduledEvents = dayEvents.filter(event => {
-      const [eventStartHour] = event.startTime.split(':').map(Number);
-      const [eventEndHour] = event.endTime.split(':').map(Number);
+    return tasks.filter(task => {
+      // If it has a start date, use that, otherwise use due date
+      const taskDate = task.start_date || task.startDate || task.due_date || task.dueDate;
+      return format(new Date(taskDate), 'yyyy-MM-dd') === currentDateStr;
+    });
+  }, [tasks, currentDate]);
+
+  const eventsForDay = useMemo(() => {
+    const currentDateStr = format(currentDate, 'yyyy-MM-dd');
+    
+    return events.filter(event => {
+      const eventStartDate = event.start_date || event.startDate;
+      const eventEndDate = event.end_date || event.endDate;
       
-      return (
-        (event.startDate === dateString && eventStartHour === hour) ||
-        (event.startDate < dateString && event.endDate > dateString) ||
-        (event.startDate === dateString && event.endDate === dateString &&
-         eventStartHour <= hour && eventEndHour > hour)
-      );
+      // If event is on a single day
+      if (eventStartDate === eventEndDate) {
+        return format(new Date(eventStartDate), 'yyyy-MM-dd') === currentDateStr;
+      }
+      
+      // For multi-day events, check if current date is within range
+      const startDate = new Date(eventStartDate);
+      const endDate = new Date(eventEndDate);
+      const currentDateObj = new Date(currentDateStr);
+      
+      return currentDateObj >= startDate && currentDateObj <= endDate;
+    });
+  }, [events, currentDate]);
+
+  // Group tasks and events by hour
+  const getItemsForHour = useCallback((hour: Date) => {
+    const hourStr = format(hour, 'HH:mm');
+    
+    const tasksForHour = tasksForDay.filter(task => {
+      const taskTime = task.start_time || task.startTime || '09:00';
+      return taskTime.substring(0, 5) === hourStr; // Compare HH:MM part
     });
     
-    return { tasks: scheduledTasks, events: scheduledEvents };
+    const eventsForHour = eventsForDay.filter(event => {
+      const eventTime = event.start_time || event.startTime || '09:00';
+      return eventTime.substring(0, 5) === hourStr; // Compare HH:MM part
+    });
+    
+    return { tasks: tasksForHour, events: eventsForHour };
+  }, [tasksForDay, eventsForDay]);
+
+  // Function to normalize task data format
+  const normalizeTask = (task: StoreTask | DatabaseTask): DatabaseTask => {
+    // If it's already a database task, return it
+    if ('due_date' in task) return task as DatabaseTask;
+    
+    // Convert from store format to database format
+    return {
+      id: task.id,
+      user_id: task.userId || '',
+      name: task.name,
+      description: task.description || null,
+      due_date: task.dueDate,
+      due_time: task.dueTime || null,
+      start_date: task.startDate || null,
+      start_time: task.startTime || null,
+      priority: task.priority,
+      project_id: task.projectId || null,
+      duration: task.duration || null,
+      chunk_size: task.chunkSize || null,
+      hard_deadline: task.hardDeadline || false,
+      completed: task.completed || false,
+      tags: task.tags || [],
+      created_at: task.createdAt,
+      updated_at: task.createdAt,
+      status: task.status
+    };
   };
-  
+
+  // Function to normalize event data format
+  const normalizeEvent = (event: StoreEvent | DatabaseEvent): DatabaseEvent => {
+    // If it's already a database event, return it
+    if ('start_date' in event) return event as DatabaseEvent;
+    
+    // Convert from store format to database format
+    return {
+      id: event.id,
+      user_id: '',
+      name: event.name,
+      description: event.description || null,
+      start_date: event.startDate,
+      start_time: event.startTime,
+      end_date: event.endDate,
+      end_time: event.endTime,
+      location: event.location || null,
+      recurring: event.recurring || 'none',
+      tags: event.tags || [],
+      created_at: event.createdAt,
+      updated_at: event.createdAt
+    };
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden h-full">
-      {/* Day header */}
-      <div className="p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-          {format(date, 'EEEE, MMMM d, yyyy')}
+    <div className="h-full flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <header className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-medium">
+          {format(currentDate, 'EEEE, MMMM d, yyyy')}
         </h2>
-      </div>
+      </header>
       
-      {/* All-day events */}
-      <div className="border-b dark:border-gray-700 p-2">
-        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">ALL DAY</div>
-        <div>
-          {dayEvents
-            .filter(event => {
-              // Consider an event as "all day" if:
-              // 1. It spans multiple days, or
-              // 2. It lasts 8+ hours on a single day
-              const isMultiDay = event.startDate !== event.endDate;
-              
-              if (!isMultiDay && event.startDate === dateString) {
-                const [startHour, startMinute] = event.startTime.split(':').map(Number);
-                const [endHour, endMinute] = event.endTime.split(':').map(Number);
-                const durationHours = endHour - startHour + (endMinute - startMinute) / 60;
-                return durationHours >= 8;
-              }
-              
-              return isMultiDay;
-            })
-            .map(event => (
-              <EventCard key={event.id} event={event as unknown as DatabaseEvent} minimal />
-            ))}
+      <ScrollArea className="flex-grow">
+        <div className="p-2 md:p-4">
+          {hours.map((hour) => {
+            const { tasks: hourTasks, events: hourEvents } = getItemsForHour(hour);
+            const hasItems = hourTasks.length > 0 || hourEvents.length > 0;
+            
+            return (
+              <div 
+                key={hour.toString()} 
+                className={`mb-2 p-2 rounded ${hasItems ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-16 flex-shrink-0 text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                    {formatTime(hour)}
+                  </div>
+                  
+                  <div className="flex-grow space-y-2">
+                    {hourTasks.map((task) => (
+                      <div key={task.id} onClick={() => onTaskClick?.(normalizeTask(task))}>
+                        <TaskCard task={normalizeTask(task)} compact={true} />
+                      </div>
+                    ))}
+                    
+                    {hourEvents.map((event) => (
+                      <div key={event.id} onClick={() => onEventClick?.(normalizeEvent(event))}>
+                        <EventCard event={normalizeEvent(event)} />
+                      </div>
+                    ))}
+                    
+                    {!hasItems && (
+                      <div className="h-8 border border-dashed border-gray-200 dark:border-gray-600 rounded">
+                        {/* Empty time slot */}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
-      
-      {/* Time slots */}
-      <div className="overflow-y-auto h-[calc(100%-120px)]">
-        {workingHours.map((hour) => {
-          const { tasks: hourTasks, events: hourEvents } = getItemsForHour(hour);
-          const hourLabel = format(addHours(startOfDay(date), hour), 'h a');
-          
-          return (
-            <div key={hour} className="flex border-b dark:border-gray-700 min-h-[80px]">
-              {/* Time label */}
-              <div className="w-20 p-2 text-right text-xs text-gray-500 dark:text-gray-400 font-medium border-r dark:border-gray-700">
-                {hourLabel}
-              </div>
-              
-              {/* Hour content */}
-              <div className="flex-1 p-2">
-                {hourTasks.map(task => {
-                  // Convert from store task type to database task type
-                  const dbTask: DatabaseTask = {
-                    id: task.id,
-                    user_id: "",
-                    project_id: task.projectId,
-                    name: task.name,
-                    description: task.description || null,
-                    start_date: task.startDate,
-                    start_time: task.startTime,
-                    due_date: task.dueDate,
-                    due_time: task.dueTime,
-                    priority: task.priority,
-                    duration: task.duration,
-                    chunk_size: task.chunkSize,
-                    hard_deadline: task.hardDeadline,
-                    completed: task.completed,
-                    completed_at: null,
-                    tags: task.tags,
-                    created_at: task.createdAt,
-                    updated_at: task.createdAt,
-                    scheduled_blocks: task.scheduledBlocks as any,
-                    status: task.status
-                  };
-                  return <TaskCard key={task.id} task={dbTask} />;
-                })}
-                
-                {hourEvents
-                  .filter(event => {
-                    // Filter out all-day events (already shown at the top)
-                    const isMultiDay = event.startDate !== event.endDate;
-                    
-                    if (!isMultiDay && event.startDate === dateString) {
-                      const [startHour, startMinute] = event.startTime.split(':').map(Number);
-                      const [endHour, endMinute] = event.endTime.split(':').map(Number);
-                      const durationHours = endHour - startHour + (endMinute - startMinute) / 60;
-                      return durationHours < 8;
-                    }
-                    
-                    return !isMultiDay;
-                  })
-                  .map(event => (
-                    <EventCard key={event.id} event={event as unknown as DatabaseEvent} />
-                  ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      </ScrollArea>
     </div>
   );
 }

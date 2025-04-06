@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/9</span>
+                <span class='fraction'>0/11</span>
             </div>
         
             
@@ -240,7 +240,21 @@
 <a name='L175'></a><a href='#L175'>175</a>
 <a name='L176'></a><a href='#L176'>176</a>
 <a name='L177'></a><a href='#L177'>177</a>
-<a name='L178'></a><a href='#L178'>178</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a>
+<a name='L188'></a><a href='#L188'>188</a>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -299,17 +313,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -319,6 +322,31 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -427,8 +455,8 @@ import { ProjectCard } from './project-card';
 import { ProjectForm } from '@/components/forms/project-form';
 import { ProjectFilters } from './project-filters';
 &nbsp;
-import { useProjectsRealtime } from '@/hooks/api/useProjectsRealtime';
-import { useTasksRealtime } from '@/hooks/api/useTasksRealtime';
+import { useProjects } from '@/hooks/api/useProjects';
+import { useTasks } from '@/hooks/api/useTasks';
 import { Project } from '@/types/database';
 import { ProjectFormValues } from '@/lib/validations/project';
 &nbsp;
@@ -452,7 +480,7 @@ export function <span class="fstat-no" title="function not covered" >ProjectList
     mutate,
   } = <span class="cstat-no" title="statement not covered" >useProjects({</span>
     completed: filters.completed,
-    priority: filters.priority as any,
+    priority: filters.priority as 'high' | 'medium' | 'low' | undefined,
     tags: filters.tags.length &gt; 0 ? filters.tags : undefined,
   });
 &nbsp;
@@ -475,6 +503,7 @@ export function <span class="fstat-no" title="function not covered" >ProjectList
       ...data,
       user_id: 'temp-user-id', // Replace with real user ID in production
       completed: false,
+      completed_at: null, // Add the missing completed_at property
     });
 <span class="cstat-no" title="statement not covered" >    setIsCreating(false);</span>
   };
@@ -482,7 +511,13 @@ export function <span class="fstat-no" title="function not covered" >ProjectList
   const handleUpdate = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async (d</span>ata: ProjectFormValues) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!selectedProject) <span class="cstat-no" title="statement not covered" >return;</span></span>
     
-<span class="cstat-no" title="statement not covered" >    await updateProject(selectedProject.id, data);</span>
+    // Preserve fields that aren't part of the form values
+<span class="cstat-no" title="statement not covered" >    await updateProject(selectedProject.id, {</span>
+      ...data,
+      user_id: selectedProject.user_id, // Preserve the user_id
+      completed: selectedProject.completed, // Preserve completed status
+      completed_at: selectedProject.completed_at // Preserve completed_at
+    });
 <span class="cstat-no" title="statement not covered" >    setSelectedProject(null);</span>
   };
 &nbsp;
@@ -492,10 +527,17 @@ export function <span class="fstat-no" title="function not covered" >ProjectList
   };
 &nbsp;
   const handleToggleComplete = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async (p</span>rojectId: string, completed: boolean) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    await updateProject(projectId, { completed });</span>
+<span class="cstat-no" title="statement not covered" >    await updateProject(projectId, { </span>
+      completed,
+      completed_at: completed ? new Date().toISOString() : null 
+    });
   };
 &nbsp;
-  const handleFilterChange = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(n</span>ewFilters: any) =&gt; {</span>
+  const handleFilterChange = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(n</span>ewFilters: {</span>
+    completed: boolean;
+    priority: 'high' | 'medium' | 'low' | undefined;
+    tags: string[];
+  }) =&gt; {
 <span class="cstat-no" title="statement not covered" >    setFilters(newFilters);</span>
   };
 &nbsp;
@@ -601,7 +643,7 @@ export function <span class="fstat-no" title="function not covered" >ProjectList
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-04-04T00:18:49.416Z
+                at 2025-04-05T16:44:00.695Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

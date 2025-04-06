@@ -1,5 +1,6 @@
 'use client';
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { differenceInCalendarDays, format, subDays } from 'date-fns';
 import { Task } from '@/types/database';
 
@@ -11,79 +12,108 @@ interface ProductivityScoreProps {
 export function ProductivityScore({ tasks, days = 7 }: ProductivityScoreProps) {
   // Filter tasks based on completion date
   const filteredTasks = tasks.filter(task => {
-    if (!task.completed || !task.completed_at) return false;
+    if (!task.completed) return false;
     
-    const completedDate = new Date(task.completed_at);
+    // Get creation date from created_at
+    const createdDate = new Date(task.created_at);
     const startDate = subDays(new Date(), days);
-    return completedDate >= startDate;
+    return createdDate >= startDate;
   });
   
-  // Calculate productivity score
-  const score = calculateProductivityScore(filteredTasks);
+  // Calculate weighted score
+  let totalScore = 0;
+  filteredTasks.forEach(task => {
+    // Base points for completion
+    let points = 10;
+    
+    // Priority multiplier
+    const priorityMultiplier = task.priority === 'high' 
+      ? 1.5 
+      : task.priority === 'medium' 
+        ? 1.2 
+        : 1;
+    
+    points *= priorityMultiplier;
+    
+    // Add to total
+    totalScore += points;
+  });
   
-  // Get score color based on value
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-500';
-    if (score >= 60) return 'text-yellow-500';
-    return 'text-red-500';
+  // Normalize score (0-100)
+  const normalizedScore = Math.min(100, Math.round(totalScore / 5));
+  
+  // Get description based on score
+  const getScoreDescription = (score: number) => {
+    if (score >= 80) return 'Excellent';
+    if (score >= 60) return 'Good';
+    if (score >= 40) return 'Average';
+    if (score >= 20) return 'Needs Improvement';
+    return 'Low Activity';
   };
   
-  // Get trend indicator
-  const getTrend = () => {
-    // This would ideally compare to previous period
-    // Placeholder for now
-    return Math.random() > 0.5 ? 'up' : 'down';
-  };
-  
-  const trend = getTrend();
-  
-  return (
-    <div className="flex flex-col items-center p-4 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800">
-      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Productivity Score
-      </h3>
-      <div className={`text-4xl font-bold ${getScoreColor(score)}`}>
-        {score}
-      </div>
-      <div className="flex items-center mt-2">
-        <span className={`text-xs ${
-          trend === 'up' ? 'text-green-500' : 'text-red-500'
-        }`}>
-          {trend === 'up' ? '↑' : '↓'} 
-          {trend === 'up' ? '12%' : '8%'} from last week
-        </span>
-      </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-        Based on task completion and priority
-        <br />
-        over the last {days} days
-      </p>
-    </div>
-  );
-}
+  // Format period text
+  const periodText = days === 7 
+    ? 'Past Week' 
+    : days === 30 
+      ? 'Past Month' 
+      : `Past ${days} Days`;
 
-/**
- * Calculate productivity score based on completed tasks and their priorities
- */
-function calculateProductivityScore(tasks: Task[]): number {
-  if (tasks.length === 0) return 0;
-  
-  // Weight by priority
-  const priorityWeights = {
-    high: 5,
-    medium: 3,
-    low: 1
-  };
-  
-  // Calculate weighted sum of completed tasks
-  const weightedSum = tasks.reduce((sum, task) => {
-    return sum + priorityWeights[task.priority];
-  }, 0);
-  
-  // Normalize to a 0-100 scale
-  // This is a simple algorithm and could be made more sophisticated
-  // For now, we'll say 10 points of weighted sum = 100% score
-  const normalizedScore = Math.min(100, Math.round(weightedSum * 10));
-  
-  return normalizedScore;
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-medium">Productivity Score</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-center">
+          <div className="relative h-28 w-28 flex items-center justify-center">
+            <svg viewBox="0 0 100 100" className="h-full w-full">
+              {/* Background circle */}
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke="#e2e8f0"
+                strokeWidth="10"
+              />
+              {/* Progress circle - stroke-dasharray is circumference, stroke-dashoffset is circumference - (circumference * progress) */}
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke={
+                  normalizedScore >= 80 
+                    ? '#10b981' 
+                    : normalizedScore >= 60 
+                      ? '#6366f1' 
+                      : normalizedScore >= 40 
+                        ? '#f59e0b' 
+                        : '#ef4444'
+                }
+                strokeWidth="10"
+                strokeDasharray="282.7"
+                strokeDashoffset={282.7 * (1 - normalizedScore / 100)}
+                strokeLinecap="round"
+                transform="rotate(-90 50 50)"
+              />
+            </svg>
+            <div className="absolute flex flex-col items-center justify-center">
+              <span className="text-3xl font-bold">{normalizedScore}</span>
+              <span className="text-xs text-gray-500">/100</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-3 text-center">
+          <p className="text-sm font-semibold">
+            {getScoreDescription(normalizedScore)}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            Based on {filteredTasks.length} completed tasks in the {periodText}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

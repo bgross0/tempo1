@@ -87,6 +87,7 @@ export type Database = {
       projects: {
         Row: {
           completed: boolean
+          completed_at: string | null
           created_at: string
           description: string | null
           due_date: string
@@ -100,6 +101,7 @@ export type Database = {
         }
         Insert: {
           completed?: boolean
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date: string
@@ -113,6 +115,7 @@ export type Database = {
         }
         Update: {
           completed?: boolean
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date?: string
@@ -171,7 +174,6 @@ export type Database = {
         Row: {
           chunk_size: number | null
           completed: boolean
-          completed_at: string | null
           created_at: string
           description: string | null
           due_date: string
@@ -182,9 +184,9 @@ export type Database = {
           name: string
           priority: string
           project_id: string | null
-          scheduled_blocks: Json | null
           start_date: string | null
           start_time: string | null
+          status: string
           tags: string[] | null
           updated_at: string
           user_id: string
@@ -192,7 +194,6 @@ export type Database = {
         Insert: {
           chunk_size?: number | null
           completed?: boolean
-          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date: string
@@ -203,9 +204,9 @@ export type Database = {
           name: string
           priority?: string
           project_id?: string | null
-          scheduled_blocks?: Json | null
           start_date?: string | null
           start_time?: string | null
+          status?: string
           tags?: string[] | null
           updated_at?: string
           user_id: string
@@ -213,7 +214,6 @@ export type Database = {
         Update: {
           chunk_size?: number | null
           completed?: boolean
-          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date?: string
@@ -224,9 +224,9 @@ export type Database = {
           name?: string
           priority?: string
           project_id?: string | null
-          scheduled_blocks?: Json | null
           start_date?: string | null
           start_time?: string | null
+          status?: string
           tags?: string[] | null
           updated_at?: string
           user_id?: string

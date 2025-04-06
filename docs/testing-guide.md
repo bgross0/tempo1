@@ -70,27 +70,25 @@ Visit the testing deployment at: [Tempo Testing Environment](https://tempo-stagi
 
 ### Running Tests
 
-Tempo includes three types of tests:
+Tempo includes two types of tests:
 
-1. **Unit Tests**: Test individual functions and components
+1. **Unit and Integration Tests**: Test individual functions, components, and component interactions
    ```bash
-   npm run test:unit
+   npm test               # Run all tests
+   npm run test:watch     # Run tests in watch mode
+   npm run test:unit      # Run only unit tests
+   npm run test:integration # Run only integration tests  
+   npm run test:coverage  # Generate test coverage report
    ```
 
-2. **Integration Tests**: Test interactions between components
-   ```bash
-   npm run test:integration
-   ```
-
-3. **End-to-End Tests**: Test complete user flows through the application
+2. **End-to-End Tests**: Test complete user flows through the application
    ```bash
    npm run test:e2e
    ```
 
 ### Test Coverage
 
-- Unit tests: Core business logic and components
-- Integration tests: Component interactions, data flow, state management
+- Unit and integration tests: Core business logic, components, and component interactions
 - E2E tests: Complete user journeys through the application
 
 ## Known Limitations
@@ -154,10 +152,3 @@ We've added React Error Boundaries throughout the application to improve resilie
 - See a helpful error message
 - Try to recover with a "Retry" button
 - Continue using the rest of the application
-
-### Integration Tests
-We've implemented comprehensive integration tests to verify that components work correctly together. These tests cover:
-- Authentication flows
-- Task list interactions
-- Calendar functionality
-- Error boundary recovery

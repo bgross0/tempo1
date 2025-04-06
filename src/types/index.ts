@@ -46,7 +46,8 @@ export interface Task {
   completed: boolean;
   status: TaskStatus;
   createdAt: string;
-  scheduledBlocks: ScheduledBlock[];
+  updatedAt: string;
+  userId: string;
 }
 
 // Project Interface
