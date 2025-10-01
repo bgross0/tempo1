@@ -1,6 +1,6 @@
-# TaskJet
+# Tempo
 
-TaskJet is a powerful task management application designed for individuals and teams who need a robust, intuitive solution for organizing tasks, managing projects, scheduling events, and tracking productivity.
+Tempo is a powerful task management application designed for individuals and teams who need a robust, intuitive solution for organizing tasks, managing projects, scheduling events, and tracking productivity.
 
 ## Features
 
@@ -61,7 +61,7 @@ TaskJet is a powerful task management application designed for individuals and t
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/taskjet.git
+git clone https://github.com/yourusername/tempo1.git
 cd taskjet
 ```
 
@@ -160,7 +160,7 @@ npm run start
 
 ## Deployment
 
-TaskJet is configured for deployment on Vercel:
+Tempo is configured for deployment on Vercel:
 
 1. Connect your GitHub repository to Vercel:
    ```bash
